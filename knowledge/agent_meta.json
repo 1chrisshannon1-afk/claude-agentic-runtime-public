@@ -1,0 +1,237 @@
+{
+  "implement": {
+    "department": "dev",
+    "trigger": "A multi-file or exploratory code change, on a file partition the orchestrator assigns",
+    "dispatched_by": "orchestrator"
+  },
+  "test-writer": {
+    "department": "dev",
+    "trigger": "Right after or alongside an implement change, or to cover code that is already committed",
+    "dispatched_by": "orchestrator"
+  },
+  "test-runner": {
+    "department": "dev",
+    "trigger": "A named test suite needs running, or a flake check over N identical reruns",
+    "dispatched_by": "orchestrator"
+  },
+  "code-reviewer": {
+    "department": "dev",
+    "trigger": "Before every commit on a non-trust-surface pathspec; the pre-commit review gate requires it",
+    "dispatched_by": "orchestrator"
+  },
+  "plan-reviewer": {
+    "department": "dev",
+    "trigger": "Before implementing any substantial plan",
+    "dispatched_by": "orchestrator, scheduled-job"
+  },
+  "explore": {
+    "department": "dev",
+    "trigger": "Fast read-only codebase mapping when the answer is not already known",
+    "dispatched_by": "orchestrator"
+  },
+  "git-ops": {
+    "department": "dev",
+    "trigger": "A path-scoped local commit, an issue lifecycle step, PR text prep, or an on-demand CI audit",
+    "dispatched_by": "orchestrator"
+  },
+  "ci-monitor": {
+    "department": "dev",
+    "trigger": "A CI run needs polling to completion, with pass or fail and failure logs reported",
+    "dispatched_by": "orchestrator"
+  },
+  "browser-ops": {
+    "department": "dev",
+    "trigger": "One browser action on a pool slot the orchestrator has already leased",
+    "dispatched_by": "orchestrator, marketing-director"
+  },
+  "design-reviewer": {
+    "department": "dev",
+    "trigger": "A UI diff, page, component or mock needs review against the design system, before or as it is built",
+    "dispatched_by": "orchestrator"
+  },
+  "session-coordinator": {
+    "department": "dev",
+    "trigger": "Only when a live session is designated integration-lane coordinator for a multi-worktree effort (rare)",
+    "dispatched_by": "operator"
+  },
+  "launch-director": {
+    "department": "oversight",
+    "trigger": "Weekly scheduled report, and on demand",
+    "dispatched_by": "scheduled-job, orchestrator"
+  },
+  "board-steward": {
+    "department": "oversight",
+    "trigger": "Tracker cleanup (dedupe, re-triage, honest closes); run inside the nightly issue wheel's close phase, or directly",
+    "dispatched_by": "scheduled-job, orchestrator"
+  },
+  "sentinel": {
+    "department": "oversight",
+    "trigger": "Daily sweep and the heartbeat audit of every scheduled job",
+    "dispatched_by": "scheduled-job"
+  },
+  "consistency-auditor": {
+    "department": "oversight",
+    "trigger": "The daily sweep's consistency slot",
+    "dispatched_by": "scheduled-job"
+  },
+  "test-architect": {
+    "department": "oversight",
+    "trigger": "Monthly audit, and on demand",
+    "dispatched_by": "scheduled-job, orchestrator"
+  },
+  "trust-architect": {
+    "department": "oversight",
+    "trigger": "Monthly security audit, and as reviewer of record in place of code-reviewer on trust-surface commits",
+    "dispatched_by": "scheduled-job, orchestrator"
+  },
+  "product-qa": {
+    "department": "oversight",
+    "trigger": "Weekly and after a deploy: a scripted staging walkthrough as a customer persona",
+    "dispatched_by": "scheduled-job, orchestrator"
+  },
+  "agentic-systems-architect": {
+    "department": "oversight",
+    "trigger": "Monthly audit, and on demand for agent-definition, feedback-loop and pipeline design",
+    "dispatched_by": "scheduled-job, orchestrator"
+  },
+  "code-quality-architect": {
+    "department": "oversight",
+    "trigger": "Dispatch-only, no schedule; a monthly cadence is the intent",
+    "dispatched_by": "orchestrator"
+  },
+  "admin-portal-architect": {
+    "department": "oversight",
+    "trigger": "Dispatch-only, no schedule",
+    "dispatched_by": "orchestrator"
+  },
+  "observability-architect": {
+    "department": "oversight",
+    "trigger": "Dispatch-only, no schedule",
+    "dispatched_by": "orchestrator"
+  },
+  "devops-architect": {
+    "department": "oversight",
+    "trigger": "Dispatch-only, no schedule",
+    "dispatched_by": "orchestrator"
+  },
+  "research-scout": {
+    "department": "oversight",
+    "trigger": "A pre-plan prior-art check, or an OSS discovery sweep; dispatch-only",
+    "dispatched_by": "orchestrator, marketing-director, venture-director"
+  },
+  "market-analyst": {
+    "department": "oversight",
+    "trigger": "A competitor or market delta sweep for one product; dispatch-only",
+    "dispatched_by": "orchestrator, marketing-director, venture-director"
+  },
+  "cost-strategist": {
+    "department": "oversight",
+    "trigger": "A FinOps audit of vendor, cloud and AI spend; dispatch-only",
+    "dispatched_by": "orchestrator, venture-director"
+  },
+  "marketing-director": {
+    "department": "marketing",
+    "trigger": "Mission dispatch through the /gtm skill; no schedule",
+    "dispatched_by": "operator"
+  },
+  "conversion-architect": {
+    "department": "marketing",
+    "trigger": "A mission phase that reviews public funnel surfaces: offers, calls to action, signup friction",
+    "dispatched_by": "marketing-director"
+  },
+  "brand-architect": {
+    "department": "marketing",
+    "trigger": "A mission phase that reviews a marketing surface's visual identity",
+    "dispatched_by": "marketing-director"
+  },
+  "content-strategist": {
+    "department": "marketing",
+    "trigger": "A mission phase that needs headlines, page copy, email sequences or video scripts",
+    "dispatched_by": "marketing-director"
+  },
+  "seo-architect": {
+    "department": "marketing",
+    "trigger": "A mission phase that audits crawlability, schema markup, page speed and keyword gaps",
+    "dispatched_by": "marketing-director"
+  },
+  "paid-acquisition-strategist": {
+    "department": "marketing",
+    "trigger": "A mission phase that specifies ad account structure, budgets and CAC/LTV math; advisory only",
+    "dispatched_by": "marketing-director"
+  },
+  "pricing-economist": {
+    "department": "marketing",
+    "trigger": "A mission phase that challenges a company's COGS basis or price position, or needs CAC/LTV inputs",
+    "dispatched_by": "marketing-director, venture-director"
+  },
+  "video-producer": {
+    "department": "marketing",
+    "trigger": "A mission phase that plans a video's shots and screen flow, or reviews a rendered cut",
+    "dispatched_by": "marketing-director"
+  },
+  "local-presence-architect": {
+    "department": "marketing",
+    "trigger": "A mission phase that covers local listings, name-address-phone consistency and review-response policy",
+    "dispatched_by": "marketing-director"
+  },
+  "social-media-strategist": {
+    "department": "marketing",
+    "trigger": "A mission phase that plans organic social: calendar, format mix, cadence caps",
+    "dispatched_by": "marketing-director"
+  },
+  "measurement-architect": {
+    "department": "marketing",
+    "trigger": "A mission phase that specifies analytics events, tag management, consent and metric definitions",
+    "dispatched_by": "marketing-director"
+  },
+  "revenue-ops-architect": {
+    "department": "marketing",
+    "trigger": "A mission phase that audits speed-to-lead, lead routing, CRM hygiene and follow-up cadences",
+    "dispatched_by": "marketing-director"
+  },
+  "gtm-analyst": {
+    "department": "marketing",
+    "trigger": "Turns handed-over exports and screenshots into scoreboard values and the weekly report",
+    "dispatched_by": "marketing-director"
+  },
+  "gtm-drafter": {
+    "department": "marketing",
+    "trigger": "Drafts short-form pieces: review replies, social captions, listing text",
+    "dispatched_by": "marketing-director"
+  },
+  "gtm-checker": {
+    "department": "marketing",
+    "trigger": "Checks a marketing or venture draft against its claims, AI-content and compliance checklist",
+    "dispatched_by": "marketing-director, venture-director"
+  },
+  "venture-director": {
+    "department": "venture",
+    "trigger": "Mission dispatch by name; no schedule",
+    "dispatched_by": "operator"
+  },
+  "capital-and-exit-strategist": {
+    "department": "venture",
+    "trigger": "Exit paths, valuation ranges, deal structure and buyer materials inside a venture mission",
+    "dispatched_by": "venture-director"
+  },
+  "bizdev-outbound-strategist": {
+    "department": "venture",
+    "trigger": "Planning outbound B2B outreach and relationship sequences inside a venture mission",
+    "dispatched_by": "venture-director"
+  },
+  "partner-recruiter": {
+    "department": "venture",
+    "trigger": "Shortlisting and outreach drafts for a co-founder or advisor",
+    "dispatched_by": "venture-director, operator"
+  },
+  "hiring-specialist": {
+    "department": "venture",
+    "trigger": "Staff hiring for one company, from role requirements to offer drafts; dispatched by name",
+    "dispatched_by": "operator"
+  },
+  "trading-strategist": {
+    "department": "domain",
+    "trigger": "A second opinion on a candidate equities or ag-futures trade, in a repo with a trading engine; dispatched by name",
+    "dispatched_by": "operator"
+  }
+}

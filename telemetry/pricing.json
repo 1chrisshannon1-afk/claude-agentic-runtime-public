@@ -1,0 +1,35 @@
+{
+  "version": "2026-09-05",
+  "currency": "usd",
+  "notes": [
+    "OPERATOR-EDITABLE. Read by hooks/cycle_telemetry.py:load_pricing() -- never",
+    "hardcoded in code. Rates are USD per 1,000,000 tokens, broken out by the",
+    "same four buckets the spend ledger records: input, output, cache_read,",
+    "cache_creation (5-minute prompt-cache write). These are illustrative",
+    "figures VERIFIED 2026-09-05 against platform.claude.com/docs/en/about-claude/pricing",
+    "(cache_read = 0.1x input; cache_creation = 1.25x input, the 5-minute write).",
+    "CORRECTION 2026-09-05: every rate in this file was STALE and was corrected.",
+    "opus-4-8 read 15/75, which are the RETIRED Opus 4.1/4.0 rates -- Opus 4.5",
+    "through Opus 5 are all 5/25, so this file overstated every opus dollar by",
+    "3.0x. sonnet-5 read 3/15; Sonnet 5's launch introductory 2/10 became the",
+    "permanent price (the 2026-09-01 rise to 3/15 was cancelled). haiku-4-5 read",
+    "0.80/4, which are the RETIRED Haiku 3.5 rates; Haiku 4.5 is 1/5.",
+    "THIS IS THE THIRD OF THREE INDEPENDENT PRICING TABLES in this runtime",
+    "(the others: hooks/cycle_budget.py PRICING_USD_PER_MTOK, coarse by family;",
+    "usage-dashboard/ccdash/pricing.py, keyed by exact model id and the",
+    "AUTHORITATIVE fine instrument -- it alone was correct). All three drifting",
+    "independently with no parity check is tracked as ledger row AA-0095.",
+    "When they disagree, ccdash wins and the other two are corrected to match.",
+    "A model string with no entry here is left UNPRICED on purpose",
+    "(cycle_telemetry.price_tokens returns null) -- the library never guesses",
+    "a price for a model it doesn't have data for. Internal/dev/aliased model",
+    "strings (e.g. a bare 'opus', or a variant tag like a long-context suffix)",
+    "are deliberately omitted rather than assumed equivalent to a base model."
+  ],
+  "per_million_tokens": {
+    "claude-opus-5": {"input": 5.0, "output": 25.0, "cache_read": 0.5, "cache_creation": 6.25},
+    "claude-opus-4-8": {"input": 5.0, "output": 25.0, "cache_read": 0.5, "cache_creation": 6.25},
+    "claude-sonnet-5": {"input": 2.0, "output": 10.0, "cache_read": 0.2, "cache_creation": 2.5},
+    "claude-haiku-4-5-20251001": {"input": 1.0, "output": 5.0, "cache_read": 0.1, "cache_creation": 1.25}
+  }
+}

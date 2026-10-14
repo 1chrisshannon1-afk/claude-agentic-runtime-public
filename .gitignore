@@ -1,0 +1,86 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Local/session state this runtime writes at runtime — not part of the
+# template itself (recreated fresh on first use in a new install)
+.enforcement/
+.review_state/
+.file_claims/
+.agent_budget/
+.browser_pool/
+.enforce
+.model_exceptions/
+.agent_obligations/
+.agent_router_state/
+.board_state/
+.churn/
+.gtm_state/
+.lanes/
+.last-cleanup
+.last_code_review
+.disk_janitor.log
+.coverage
+.mcp.json
+
+# Per-machine files: each install writes its own, never committed
+live-testing/allowlist.json
+knowledge/oversight_install.md
+knowledge/gtm_company_registry.json*
+
+# Scheduled-job and client state written at runtime
+schedules/heartbeats/
+schedules/locks/
+schedules/logs/
+schedules/state/
+schedules/queue/
+schedules/DISABLED*
+telemetry/1p_failed_events.*
+
+# Claude Code's own client state. If ~/.claude is a clone of this repo, these
+# sit beside it and must never be committed: transcripts, file backups, shell
+# snapshots, session keys, credentials and local settings.
+/projects/
+/file-history/
+/shell-snapshots/
+/sessions/
+/session-env/
+/history.jsonl
+/paste-cache/
+/plans/
+/todos/
+/ide/
+/plugins/
+/cache/
+/downloads/
+/statsig/
+/settings.local.json
+/.credentials.json
+/mcp-needs-auth-cache.json
+/.router_off
+.mirror/
+/*.bak.*
+.coverage*
+/backups/
+/tasks/
+/chrome/
+/.claude/
+
+# GTM registry state and its crash-leftover files (a tracked copy would expose private paths)
+.gtm_state/
+knowledge/gtm_company_registry.json*

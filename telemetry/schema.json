@@ -1,0 +1,539 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://claude-runtime.local/telemetry/cycle-record.schema.json",
+  "title": "cycle record",
+  "description": "One run of any self-correcting agent loop, in ANY repo. This document is\nthe formal, machine-readable shape of the contract implemented by\n~/.claude/hooks/cycle_telemetry.py. That module's validate_cycle() is the\nactual enforcement (it also checks cross-field rules a plain JSON Schema\ncannot express cleanly -- e.g. 'ended_at must not precede started_at',\n'caught_by/missed_by must be empty when plant_id is null', 'a cost of\nsource unavailable must carry a reason' -- see that module's docstrings\nfor the authoritative list). This file exists so the shape is readable\nand toolable without importing Python. Neither this file nor the module\nnames a repo, a product, or a specific loop -- 'system' and 'repo' are\nopaque data supplied by whoever emits a record.\n\nSCHEMA v2 IS PURELY ADDITIVE OVER v1: a schema_version:1 record with none\nof the ten optional top-level arrays below (runs/reviews/changes/\ndecisions/issues_filed/evidence/corrections/verdicts/stages/\ncalibration_runs) still validates, forever, unchanged. The original nine\nwere built to close eleven measured completeness gaps against a real\nsession -- see ~/.claude/plans/cycle_log_schema_v2_gaps.md and\ncycle_telemetry.py's own module docstring for the full rationale per\narray. calibration_runs was added later (2026-08-29, GH #4648) under this\nsame additive contract, to express a grader-calibration GRID (many plant\nAND clean-control rows in one record) the single `calibration` block\nbelow cannot. schema_version is descriptive metadata (which shape a\nrecord was AUTHORED against), not a gate on which optional keys may be\npresent -- a schema_version:1 record may carry v2 arrays too, since every\none of them is optional either way.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "system", "repo", "cycle_id", "started_at", "ended_at",
+    "dispatches", "calibration", "findings", "cost", "notes"
+  ],
+  "properties": {
+    "schema_version": {"enum": [1, 2]},
+    "system": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+      "description": "Slug identifying which loop this is, e.g. 'estimate-loop'. Never hardcoded by the runtime -- purely caller-supplied data."
+    },
+    "repo": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "description": "Repo NAME (not a path) that produced this cycle, or null."
+    },
+    "cycle_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+    },
+    "started_at": {"type": "string", "format": "date-time"},
+    "ended_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "null means the cycle is still in progress."
+    },
+    "dispatches": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/dispatch"}
+    },
+    "calibration": {"$ref": "#/$defs/calibration"},
+    "findings": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/finding"}
+    },
+    "cost": {"$ref": "#/$defs/cost"},
+    "notes": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "runs": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/run"},
+      "description": "v2, optional. EVERY agent run this cycle made, not just the finder pass dispatches[] already models -- a run that found nothing still happened and still cost money."
+    },
+    "reviews": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/review"},
+      "description": "v2, optional. Code/plan review boundaries -- v1 had NO review record at all."
+    },
+    "changes": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/change"},
+      "description": "v2, optional. What actually changed as a result of a finding -- commit SHA (or 'uncommitted'), files, falsifiability evidence, tests added."
+    },
+    "decisions": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/decision"},
+      "description": "v2, optional. Who decided what and why, verbatim -- an OPERATOR ruling is first-class data here, never a note in prose."
+    },
+    "issues_filed": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/issue_filed"},
+      "description": "v2, optional. Tracker issues filed as a result of this cycle."
+    },
+    "evidence": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/evidence"},
+      "description": "v2, optional. File:line citations and repro commands raisers/verifiers actually used."
+    },
+    "corrections": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/correction"},
+      "description": "v2, optional. The loop's own error record -- a retraction of a prior claim."
+    },
+    "verdicts": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/verdict"},
+      "description": "v2, optional. Raw per-scenario CONCUR/DISSENT verdicts before consolidation collapses them into findings[]."
+    },
+    "stages": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/stage"},
+      "description": "v2, optional. Which pipeline stages ran/were skipped/were blocked this cycle, and why."
+    },
+    "calibration_runs": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/calibration_run"},
+      "description": "v2, optional (added 2026-08-29, GH #4648). The GRID form of the `calibration` object above -- expresses a plants-x-trades grader-calibration grid (many plant AND clean-control rows in one record), which a single `calibration` object cannot. Never replaces `calibration`; both may be present independently, and neither is required by the other."
+    },
+    "undispatched_verdict_rows": {
+      "$ref": "#/$defs/undispatched_verdict_rows",
+      "description": "v2, optional (added 2026-09-07, round-25 structural-conflict fix). Honest accounting for a verdict row EXCLUDED from `dispatches[]` because it carries no real dispatch identity (e.g. a GC consolidation pass judging many scenarios within one already-open turn, never its own separate Task dispatch -- fabricating an identity for it is forbidden). `dispatches[]` holds real dispatches only; every excluded row's verdict still appears in `verdicts[]`/`findings[]`, unchanged -- this object is where the honest count of what got excluded, and by which judge, is recorded."
+    }
+  },
+  "$defs": {
+    "dispatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent_type", "label", "model", "tokens_total", "cost_usd",
+        "tool_calls", "duration_ms", "batch_size", "batch_position"
+      ],
+      "properties": {
+        "agent_type": {"type": "string", "minLength": 1},
+        "label": {"type": "string"},
+        "model": {"type": ["string", "null"]},
+        "tokens_total": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 1.7976931348623157e+308,
+          "description": "Harness-reported figure. NOT authoritative billed spend -- see cost.source and the README's 'why cost.source matters' section. The maximum is sys.float_info.max (round 16): cycle_telemetry.py's validate_cycle() refuses, at write time, an integer too large to survive a finite float conversion -- see is_finite_number()'s docstring. This bound is deliberately a hair STRICTER than the code's real acceptance boundary (int(sys.float_info.max) + 1 is still accepted there, because it rounds down on conversion); JSON Schema does not try to encode that float-rounding edge case, it just uses the clean, well-known constant."
+        },
+        "cost_usd": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1.7976931348623157e+308,
+          "description": "The maximum is sys.float_info.max -- see tokens_total's description above for why."
+        },
+        "tool_calls": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 1.7976931348623157e+308,
+          "description": "The maximum is sys.float_info.max -- see tokens_total's description above for why."
+        },
+        "duration_ms": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1.7976931348623157e+308,
+          "description": "The maximum is sys.float_info.max -- see tokens_total's description above for why."
+        },
+        "batch_size": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "maximum": 1.7976931348623157e+308,
+          "description": "The maximum is sys.float_info.max -- see tokens_total's description above for why."
+        },
+        "batch_position": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "maximum": 1.7976931348623157e+308,
+          "description": "The maximum is sys.float_info.max -- see tokens_total's description above for why."
+        },
+        "tokens_reported": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 1.7976931348623157e+308,
+          "description": "v2, optional. The harness's own (possibly untrustworthy) token figure, RECORDED rather than deleted -- requires tokens_source to be set whenever this is non-null. The maximum is sys.float_info.max -- see tokens_total's description above for why."
+        },
+        "tokens_source": {
+          "type": ["string", "null"],
+          "enum": ["harness_reported", "spend_ledger", "estimated", "unavailable", null],
+          "description": "v2, optional. Provenance label for tokens_reported. Required (non-null) whenever tokens_reported is set."
+        },
+        "tool_use_id": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "description": "v2, optional. The spend ledger's own tool_use_id for this dispatch -- the STRONGEST identity signal resolve_cost() can match on (genuinely cycle-unique: one dispatch, one tool call). An empty string is a data defect (rejected), never treated the same as null/absent."
+        },
+        "agent_id": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "description": "v2, optional. The spend ledger's own agent_id for this dispatch -- an identity signal resolve_cost() can match on when tool_use_id is unavailable. An empty string is a data defect (rejected), never treated the same as null/absent."
+        },
+        "session": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "description": "v2, optional. The spend ledger's own session identifier for this dispatch -- the COARSEST identity signal resolve_cost() accepts; it establishes only same-SESSION correspondence, not same-cycle correspondence (a session can run more than one cycle). An empty string is a data defect (rejected), never treated the same as null/absent."
+        },
+        "item_key": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "description": "v2, optional. Renamed from wave_item (THE ISSUE WHEEL rollout, commit 8c) -- originally added for the retired Standing Delivery Wheel ('sdw' system), now a general-purpose field used by any system whose dispatches map to a discrete work item, e.g. THE ISSUE WHEEL's own lanes. A free-string join key back to a work item (conventionally the item's issue number as a string; 'row-<index>' for a fallback-mode item with no real issue number was the retired finishing loop's own convention -- THE ISSUE WHEEL's own ITEM TOKEN, schedules/prompts/issue_wheel.txt's LANE RECIPE, is issue-number-only, no fallback form). This is what makes a cycle's cost measurable PER ITEM, not just per cycle: tool_use_id/agent_id/session already let resolve_cost() find the right ledger row, but nothing before this field let a caller attribute that cost to a specific unit of work without re-deriving it from dispatch order. An empty string is a data defect (rejected), never treated the same as null/absent -- same convention as tool_use_id/agent_id/session."
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "description": "v2, optional. AA-0106 (2026-09-07). The individual units of work (e.g. scenario ids) ONE REAL DISPATCH actually covered, for a caller whose dispatch batches many scenarios into a single sub-agent call. The contract this field exists to enforce: exactly ONE dispatches[] entry per REAL Task dispatch, never one entry per scenario -- a producer that instead multiplied one dispatch into N synthetic entries (one per scenario, every one echoing the same tool_use_id) is the defect this field closes; resolve_cost()'s step-4a 1:1 identity check correctly refuses such a record outright. An empty array is a data defect (rejected), never treated the same as absent -- omit the key instead."
+        }
+      }
+    },
+    "calibration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plant_id", "planted_in", "slot", "caught_by", "missed_by"],
+      "properties": {
+        "plant_id": {
+          "type": ["string", "null"],
+          "description": "null means no calibration plant was seeded this cycle."
+        },
+        "planted_in": {"type": ["string", "null"]},
+        "slot": {"type": ["string", "integer", "null"]},
+        "caught_by": {
+          "type": "array",
+          "items": {"type": ["string", "integer"]},
+          "description": "Slot identifiers (typically dispatches[].batch_position) that caught the plant."
+        },
+        "missed_by": {
+          "type": "array",
+          "items": {"type": ["string", "integer"]},
+          "description": "Slot identifiers that were exposed to the plant but did not report it."
+        }
+      }
+    },
+    "calibration_run": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "One row of calibration_runs[] (v2, optional, added 2026-08-29, GH #4648). Cross-field rules enforced by the Python validator, not expressible cleanly here (same pattern as this file's other Python-only cross-field rules, e.g. `evidence` below): caught_by/missed_by must be empty when plant_id is null (a CONTROL row -- nothing was seeded to catch or miss); false_alarm_finding_ids must be empty when plant_id is not null (a PLANT row -- a finding against a genuinely-seeded plant is a catch/miss, never a false alarm). See cycle_telemetry.py's _validate_calibration_run for the authoritative enforcement.",
+      "required": ["plant_id", "trade", "slot", "batch_size", "caught_by", "missed_by", "false_alarm_finding_ids"],
+      "properties": {
+        "plant_id": {
+          "type": ["string", "null"],
+          "description": "null means this row is a CLEAN CONTROL -- no plant was seeded in it."
+        },
+        "trade": {"type": "string", "minLength": 1},
+        "slot": {"type": ["string", "integer", "null"]},
+        "batch_size": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "maximum": 1.7976931348623157e+308,
+          "description": "The maximum is sys.float_info.max -- see dispatch.tokens_total's description for why."
+        },
+        "caught_by": {
+          "type": "array",
+          "items": {"type": ["string", "integer"]},
+          "description": "Slot identifiers that caught the plant. Must be empty on a control row (plant_id null)."
+        },
+        "missed_by": {
+          "type": "array",
+          "items": {"type": ["string", "integer"]},
+          "description": "Slot identifiers that were exposed to the plant but did not report it. Must be empty on a control row (plant_id null)."
+        },
+        "false_alarm_finding_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "description": "Blocker/DISSENT finding id(s) raised against this row's package. Must be empty on a plant row (plant_id not null) -- see this def's own description above."
+        }
+      }
+    },
+    "undispatched_verdict_rows": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "v2, optional (added 2026-09-07, round-25 structural-conflict fix). Cross-field rule enforced by the Python validator, not expressible cleanly here (same pattern as `calibration_run` above): by_judge's values must sum to exactly count -- see cycle_telemetry.py's _validate_undispatched_verdict_rows for the authoritative enforcement.",
+      "required": ["count", "by_judge"],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of verdict rows excluded from dispatches[] this cycle because they carried no real dispatch identity."
+        },
+        "by_judge": {
+          "type": "object",
+          "additionalProperties": {"type": "integer", "minimum": 0},
+          "description": "Per-judge breakdown of the excluded count, keyed by the ledger's own raw judge label (e.g. \"gc\"). A TRADE judge appearing here (rather than only \"gc\") means that judge's dispatch identity was never recorded -- a recording miss, made visible here rather than silently absent from both dispatches[] and this accounting."
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "finding_id", "raised_by", "claim_symptom", "claim_cause",
+        "consolidator_decision", "verifier_verdict", "verifier_cause_upheld",
+        "already_tracked_as", "fights_ruling", "fix_status"
+      ],
+      "properties": {
+        "finding_id": {"type": "string", "minLength": 1},
+        "raised_by": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "claim_symptom": {"type": "string", "minLength": 1},
+        "claim_cause": {"type": "string", "minLength": 1},
+        "consolidator_decision": {
+          "enum": ["ACCEPT", "REJECT", "CONTESTED", "GC_DEFAULT", "HINT_WORTHY"]
+        },
+        "verifier_verdict": {
+          "enum": [
+            "CONFIRMED", "PARTIALLY_CONFIRMED", "REFUTED",
+            "ALREADY_TRACKED_ELSEWHERE", "UNVERIFIABLE", null
+          ],
+          "description": "null means not yet verified."
+        },
+        "verifier_cause_upheld": {
+          "type": ["boolean", "null"],
+          "description": "Was the RAISER's stated root cause actually right? null means not yet judged."
+        },
+        "already_tracked_as": {"type": ["string", "null"]},
+        "fights_ruling": {
+          "type": ["boolean", "string", "null"],
+          "description": "Truthy (a ruling id string, or true) means this finding contradicts an already-ratified ruling."
+        },
+        "fix_status": {"type": ["string", "null"], "minLength": 1},
+        "found_at_stage": {
+          "type": ["string", "null"],
+          "enum": ["finder", "consolidation", "verifier", "review", null],
+          "description": "v2, optional. Accepts a 'consolidation' origin so a finding the consolidator surfaced but that never reached a verifier is representable at all."
+        },
+        "issue_refs": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "description": "v2, optional. Issue id(s) filed as a direct result of this finding."
+        }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "total_tokens", "total_usd"],
+      "properties": {
+        "source": {
+          "enum": ["spend_ledger", "reported", "unavailable"],
+          "description": "'unavailable' extends the base 'spend_ledger|reported' pair for the honest-refusal path (see resolve_cost in cycle_telemetry.py) -- a real cost figure is never fabricated."
+        },
+        "total_tokens": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 1.7976931348623157e+308,
+          "description": "The maximum is sys.float_info.max -- see dispatch.tokens_total's description for why."
+        },
+        "total_usd": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1.7976931348623157e+308,
+          "description": "The maximum is sys.float_info.max -- see dispatch.tokens_total's description for why."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Required (by the Python validator, not expressible cleanly here) whenever source is 'unavailable', or when source is 'spend_ledger' with total_usd null."
+        },
+        "window": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["start", "end", "tolerance_sec"],
+          "properties": {
+            "start": {"type": "string"},
+            "end": {"type": "string"},
+            "tolerance_sec": {
+              "type": "number",
+              "maximum": 1.7976931348623157e+308,
+              "description": "The maximum is sys.float_info.max -- see dispatch.tokens_total's description for why."
+            }
+          }
+        },
+        "matched_rows": {"type": ["integer", "null"], "minimum": 0},
+        "unpriced_models": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "purpose", "agent_types", "model", "started_at", "ended_at", "dispatch_count", "outcome"],
+      "properties": {
+        "run_id": {"type": "string", "minLength": 1},
+        "purpose": {"type": "string", "minLength": 1},
+        "agent_types": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "model": {"type": ["string", "null"]},
+        "started_at": {"type": ["string", "null"], "format": "date-time"},
+        "ended_at": {"type": ["string", "null"], "format": "date-time"},
+        "dispatch_count": {"type": ["integer", "null"], "minimum": 0},
+        "outcome": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Never empty, even for a run that found nothing -- e.g. 'occurred; no further detail captured' is a valid, honest outcome."
+        }
+      }
+    },
+    "review_finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description", "severity", "fixed"],
+      "properties": {
+        "description": {"type": "string", "minLength": 1},
+        "severity": {"enum": ["blocker", "major", "minor", "nit"]},
+        "fixed": {
+          "type": ["boolean", "null"],
+          "description": "null means not yet re-confirmed -- never assumed true."
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "review_id", "reviewer", "model", "target", "related_findings", "round",
+        "blocker_count", "findings", "upheld_decisions", "overturned_decisions",
+        "outcome", "reviewed_at"
+      ],
+      "properties": {
+        "review_id": {"type": "string", "minLength": 1},
+        "reviewer": {"type": "string", "minLength": 1},
+        "model": {"type": ["string", "null"]},
+        "target": {"type": "string", "minLength": 1},
+        "related_findings": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "round": {"type": "integer", "minimum": 1},
+        "blocker_count": {"type": "integer", "minimum": 0},
+        "findings": {"type": "array", "items": {"$ref": "#/$defs/review_finding"}},
+        "upheld_decisions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "overturned_decisions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "outcome": {
+          "enum": ["clean", "blockers"],
+          "description": "Cross-checked against blocker_count by the Python validator: 'clean' requires 0, 'blockers' requires >=1."
+        },
+        "reviewed_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "change_id", "finding_id", "commit_sha", "files", "lines_added",
+        "lines_removed", "red_before_green", "tests_added", "golden_net_drift", "reverted"
+      ],
+      "properties": {
+        "change_id": {"type": "string", "minLength": 1},
+        "finding_id": {"type": ["string", "null"]},
+        "commit_sha": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Literal string 'uncommitted' is valid when nothing has landed yet."
+        },
+        "files": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "lines_added": {"type": ["integer", "null"], "minimum": 0},
+        "lines_removed": {"type": ["integer", "null"], "minimum": 0},
+        "red_before_green": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Falsifiability evidence text, or the literal 'unverified' when it genuinely wasn't done -- never omitted."
+        },
+        "tests_added": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "golden_net_drift": {"type": ["string", "null"]},
+        "reverted": {"type": "boolean"}
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision_id", "decided_by", "what", "reasoning", "supersedes", "action", "decided_at"],
+      "properties": {
+        "decision_id": {"type": "string", "minLength": 1},
+        "decided_by": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A free string, e.g. an agent type OR the literal 'OPERATOR' -- operator rulings are first-class data, not a special enum value."
+        },
+        "what": {"type": "string", "minLength": 1},
+        "reasoning": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Verbatim reasoning, required and non-empty -- this is the entire point of the array."
+        },
+        "supersedes": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "action": {"type": "string", "minLength": 1},
+        "decided_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "issue_filed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["issue_id", "title", "related_findings", "filed_by", "filed_at", "status"],
+      "properties": {
+        "issue_id": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1},
+        "related_findings": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "filed_by": {"type": ["string", "null"]},
+        "filed_at": {"type": ["string", "null"], "format": "date-time"},
+        "status": {"type": ["string", "null"]}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "description": "Cross-field rule enforced by the Python validator, not expressible in JSON Schema itself: at least one of file/quote/repro_command must be non-null.",
+      "additionalProperties": false,
+      "required": ["evidence_id", "finding_id", "file", "line", "quote", "repro_command"],
+      "properties": {
+        "evidence_id": {"type": "string", "minLength": 1},
+        "finding_id": {"type": ["string", "null"]},
+        "file": {"type": ["string", "null"]},
+        "line": {"type": ["integer", "null"], "minimum": 1},
+        "quote": {"type": ["string", "null"]},
+        "repro_command": {"type": ["string", "null"]}
+      }
+    },
+    "correction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["correction_id", "what_was_claimed", "what_was_wrong", "how_found", "invalidated"],
+      "properties": {
+        "correction_id": {"type": "string", "minLength": 1},
+        "what_was_claimed": {"type": "string", "minLength": 1},
+        "what_was_wrong": {"type": "string", "minLength": 1},
+        "how_found": {"type": "string", "minLength": 1},
+        "invalidated": {"type": ["string", "null"]}
+      }
+    },
+    "verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dispatch_label", "scenario", "verdict", "confidence", "problem_count"],
+      "properties": {
+        "dispatch_label": {"type": "string", "minLength": 1},
+        "scenario": {"type": "string", "minLength": 1},
+        "verdict": {"enum": ["CONCUR", "DISSENT"]},
+        "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "problem_count": {"type": ["integer", "null"], "minimum": 0}
+      }
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage_id", "name", "status", "blocked_reason"],
+      "properties": {
+        "stage_id": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "status": {"enum": ["ran", "skipped", "blocked"]},
+        "blocked_reason": {
+          "type": ["string", "null"],
+          "description": "Required (by the Python validator) and non-empty whenever status is 'blocked'."
+        }
+      }
+    }
+  }
+}

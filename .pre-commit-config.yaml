@@ -1,0 +1,42 @@
+# pre-commit configuration for CONTRIBUTORS' clones of this repository.
+#
+# This file is NOT installed in a live `~/.claude`: nobody runs `pre-commit
+# install` there, because the runtime's own commit gates are the PreToolUse
+# hook chain (see docs/subsystems/gate-chain.md), not the pre-commit framework.
+# Use it in a separate clone you are preparing a pull request from:
+#
+#     pipx install pre-commit        # or: pip install pre-commit
+#     pre-commit install             # run in YOUR clone, never in ~/.claude
+#     pre-commit run --all-files
+#
+# The lint rules, line length and per-file exclusions live in pyproject.toml
+# ([tool.ruff]); the hooks below only choose which tool runs and on what.
+# Revs are pinned to the versions this repository was last verified with.
+
+minimum_pre_commit_version: "3.2.0"
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.18
+    hooks:
+      # Lint with the rule set declared in pyproject.toml (E4, E7, E9, F).
+      - id: ruff-check
+      # Formats everything except the files in the deferral list in
+      # pyproject.toml [tool.ruff.format] exclude (the hook honours that list).
+      - id: ruff-format
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: [-S, warning]
+        # scripts/legacy/ holds retired shell guards that are not maintained;
+        # scripts/codex_review.sh is held by another in-flight change and is
+        # re-checked once that lands (see CHANGELOG.md "Known gaps").
+        exclude: ^scripts/(legacy/|codex_review\.sh$)
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-json
+      - id: end-of-file-fixer

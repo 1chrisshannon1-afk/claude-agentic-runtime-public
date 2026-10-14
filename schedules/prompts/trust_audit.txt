@@ -1,0 +1,24 @@
+Read and obey ~/.claude/schedules/prompts/_preamble.txt first (JOB=com.oversight.csa.trustarch).
+
+REPO RESOLUTION (runtime_bundle_repo_agnostic_plan.md WS4/H5a commit (c)): read `OVERSIGHT_REPO`
+from your own process environment (your cwd stays whatever the plist's `WorkingDirectory` sets;
+`OVERSIGHT_REPO` is a separate, resolved-repo-root env var the plist also carries). If
+`OVERSIGHT_REPO` is unset, empty, or does not resolve to a real, existing git repository (a `.git`
+entry at that path), do NOT proceed and do NOT fall back to your cwd: write the failing-step
+heartbeat per `_preamble.txt` step 5 naming "OVERSIGHT_REPO unset or invalid" and stop. Otherwise
+run `python3 ~/.claude/scripts/repo_manifest.py get product.name --repo "$OVERSIGHT_REPO"` for
+`<PRODUCT>` below (expect a display name, e.g. with internal spaces — use the `get` output
+verbatim, never a remembered literal). A `get` failure past this point is never silent either —
+write the failing-step heartbeat per `_preamble.txt` step 5 and stop. That stop rule governs
+`product.name` ONLY. A failed `get` for `github.project_owner` / `github.project_number` (the keys
+a `gh_issue.sh create --priority` needs) is the ONE exception: do NOT stop — file the issue anyway
+WITHOUT `--project`/`--owner` (it exits 0 with a stderr warning, Priority unset) and record the
+manifest gap as its own finding. Omit BOTH: passing `--project` without `--owner` exits
+PARTIAL 3 instead (the issue is still filed, its number on stdout). Phase D never drops an
+unattended job's findings for a missing board config (#5827).
+
+You are the MONTHLY TRUST AUDIT job for `<PRODUCT>` (tracked under the open oversight tracking
+issue named in `~/.claude/knowledge/oversight_install.md` §0's TRACKING line — never a hardcoded
+issue number). Dispatch the `trust-architect` agent (it reads .claude/oversight/trust-architect.md) for one dossier-scoped audit of the trust surface. Secrets are never printed — existence and location only; any production access is read-only per the dossier; identity-provider accounts are never created, modified, or deleted. The audit ALSO includes the primer §8 agentic-security slice across three surfaces: the runtime roster (`~/.claude/agents/` — reached with `ls`, not a repo-cwd Glob), the repo-local roster (`.claude/agents/`), and in-app agent surfaces per the dossier (a dossier with no agentic-surface section ⇒ that half is reported DEGRADED, never "none found"). Relay its report to ~/.claude/schedules/logs/trust_audit_<date>.md; any P1 finding notifies per the preamble; file findings per board-steward rules — repo-scope findings on this app's tracker, runtime-scope findings (the `~/.claude/` roster, hooks, gates) as a comment on the runtime's agentic-systems tracking issue (#4436). The report ends with the §8 split-trigger verdict (holding / plateaued / incident); heartbeat summary = its verdict line + that trigger word.
+
+PIN NOTE: Opus pin-honoring in headless dispatch is UNVERIFIED (install doc §0 leg 2). If the dispatched agent's output reads shallow for its tier, record PIN-SUSPECT in your heartbeat summary and continue.

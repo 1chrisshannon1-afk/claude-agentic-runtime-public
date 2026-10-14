@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+    EXAMPLE launchd job definition for THE ISSUE WHEEL — the scheduled
+    GitHub-issue triage/fix/close loop. Copy this file, rename it to match
+    the Label below, fill in every __PLACEHOLDER__, then:
+        cp example.wheel.plist ~/Library/LaunchAgents/com.oversight.wheel.__APP__.plist
+        launchctl load ~/Library/LaunchAgents/com.oversight.wheel.__APP__.plist
+
+    Runs through the same run_oversight_job.sh wrapper as every other
+    oversight job (see example.oversight.plist for that contract) — the
+    difference here is entirely in the EnvironmentVariables block below,
+    which run_oversight_job.sh's concurrency guard reads (WHEEL_SLUG) and
+    which the wheel's own prompt (schedules/prompts/issue_wheel.txt) reads
+    for everything else. Read issue_wheel.txt before wiring this up — it is
+    the actual job logic; this plist only starts it.
+
+    Why WHEEL_SLUG matters here and nowhere else: run_oversight_job.sh takes
+    an exclusive, PID-liveness-checked lock keyed on this value before
+    running anything, so an on-demand `/wheel __SLUG__` invocation and this
+    scheduled job can never race each other against the same repo. Every
+    OTHER oversight job leaves WHEEL_SLUG unset and gets no lock at all —
+    that's fine, they don't need one.
+
+    OVERSIGHT_PRIME_APP (card 44 / GH #5569, documented in
+    example.oversight.plist, not repeated here) is deliberately OMITTED from
+    this template: it re-primes a staging browser-pool jar before the CLI
+    starts, and the wheel does no browser walk, so setting it here would
+    spend a staging login per run for nothing. If a future wheel job's own
+    prompt ever needs a primed browser pool, add the same key/comment pair
+    example.oversight.plist carries — the wrapper reads it identically
+    regardless of which prompt is running.
+    -->
+    <key>Label</key>
+    <string>com.oversight.wheel.__APP_SLUG__</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>exec /bin/bash "$HOME"/.claude/schedules/run_oversight_job.sh com.oversight.wheel.__APP_SLUG__ "$HOME"/.claude/schedules/prompts/issue_wheel.txt "22:10 Mon-Fri" 10800</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__ABSOLUTE_PATH_TO_YOUR_REPO__</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>HOME</key>
+        <string>__ABSOLUTE_PATH_TO_YOUR_HOME__</string>
+
+        <!-- Everything below is issue_wheel.txt's own contract, not
+             run_oversight_job.sh's — except WHEEL_SLUG, which the wrapper's
+             concurrency guard reads directly. -->
+
+        <key>WHEEL_REPO</key>
+        <!-- Same value as WorkingDirectory above; issue_wheel.txt reads
+             this one, not WorkingDirectory, for its own repo-root logic. -->
+        <string>__ABSOLUTE_PATH_TO_YOUR_REPO__</string>
+        <key>WHEEL_SLUG</key>
+        <!-- Short, stable identifier for this repo — used as the lock name
+             (run_oversight_job.sh) and to namespace this repo's own state
+             files (ledger, heartbeats). Pick something short and unique
+             across every repo you run the wheel against.
+
+             REQUIRED: this exact value must also be a top-level key in
+             knowledge/wheel_repos.json (see knowledge/example.wheel_repos.json
+             for the template + field reference — copy it there first). A
+             WHEEL_SLUG with no matching key is a fail-loud stop in
+             issue_wheel.txt, the same class of failure as an unset
+             WHEEL_REPO — filling in every OTHER placeholder in this plist
+             is not enough on its own. -->
+        <string>__YOUR_REPO_SLUG__</string>
+        <key>WHEEL_GH_REPO</key>
+        <!-- "__GITHUB_ORG__/__GITHUB_REPO__" — passed straight to `gh` calls. -->
+        <string>__GITHUB_ORG__/__GITHUB_REPO__</string>
+        <key>WHEEL_PROJECT</key>
+        <!-- GitHub Projects (v2) project NUMBER, not name — `gh project view`
+             with `__N__` and the owner flag set to __WHEEL_PROJECT_OWNER__
+             must resolve it. -->
+        <string>__PROJECT_NUMBER__</string>
+        <key>WHEEL_PROJECT_OWNER</key>
+        <string>__GITHUB_ORG_OR_USER__</string>
+        <key>WHEEL_LEDGER_REL</key>
+        <!-- Repo-relative path where the wheel keeps its own run ledger
+             (a JSON file it creates on first run if missing). -->
+        <string>__RELATIVE/PATH/TO/ISSUE_BURNDOWN_LEDGER.JSON__</string>
+        <!-- WHEEL_TRACKER_REL — RETIRED (THE ISSUE WHEEL plan, Phase C item 4,
+             fix round item 3). It used to point at a repo's living launch-
+             readiness/status tracker doc; issue_wheel.txt no longer reads it
+             at all (the tracker rel CLI flag on issue_wheel_queue.py is now
+             OPTIONAL and is omitted from the P4 command entirely) —
+             do not add this key to a real installed plist; every item
+             defaults to tier 2 with no tracker-driven override. -->
+        <key>WHEEL_RANKED_GLOB</key>
+        <!-- Glob (relative to WHEEL_REPO) matching your own dated ranked-
+             work snapshots, if you produce any — e.g.
+             "myapp_state_[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].html".
+             Safe to leave as a glob that matches nothing if you don't. -->
+        <string>__YOUR_STATE_GLOB_PATTERN__</string>
+        <key>WHEEL_LANE_CAP</key>
+        <!-- Max issues the wheel works in parallel per run. Start at 1
+             until you've watched it run cleanly a few times. -->
+        <string>1</string>
+        <key>WHEEL_TRIAGE_SEED_CAP</key>
+        <!-- Max open issues the triage phase (P1) will pull in per run. -->
+        <string>120</string>
+        <key>WHEEL_FIX_ENABLED</key>
+        <!-- "0" = triage/report only, never edits code. "1" = the wheel may
+             dispatch fix work. Leave at 0 until you trust P1's triage
+             output on YOUR repo's issues. -->
+        <string>0</string>
+        <key>WHEEL_CLOSE_ENABLED</key>
+        <!-- "0" = never closes an issue. "1" = the wheel's P3 CLOSE phase
+             may close issues under its own standing authorization — see
+             issue_wheel.txt's own P3 section for exactly what that requires
+             (a real resolving commit, gh_issue.sh's guards, gate 5). Leave
+             at 0 until WHEEL_FIX_ENABLED has run cleanly for a while. -->
+        <string>0</string>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>__ABSOLUTE_PATH_TO_YOUR_HOME__/.claude/schedules/logs/com.oversight.wheel.__APP_SLUG__.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>__ABSOLUTE_PATH_TO_YOUR_HOME__/.claude/schedules/logs/com.oversight.wheel.__APP_SLUG__.err.log</string>
+    <key>StartCalendarInterval</key>
+    <!-- Primary slot: weeknights at 22:10 (Weekday 1=Monday..5=Friday), PLUS
+         a SECOND, retry slot at 03:30 the FOLLOWING calendar night (THE
+         ISSUE WHEEL plan, Phase C item 1; fix round item 3 brought this
+         template in line with the two live installed plists). The wrapper
+         (run_oversight_job.sh) skips the retry slot's own main run when the
+         primary slot already finished status:"ok" the same UTC calendar
+         date; see that script's own "Second-slot skip" comment. If your
+         primary slot time differs from 22:10, shift the retry slot's
+         weekday-and-hour pairing to match (it must land on the CALENDAR DAY
+         AFTER each primary firing, in UTC — see run_oversight_job.sh's own
+         "Second-slot skip" comment for exactly what the skip compares). -->
+    <array>
+        <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>22</integer><key>Minute</key><integer>10</integer></dict>
+        <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>22</integer><key>Minute</key><integer>10</integer></dict>
+        <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>22</integer><key>Minute</key><integer>10</integer></dict>
+        <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>22</integer><key>Minute</key><integer>10</integer></dict>
+        <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>22</integer><key>Minute</key><integer>10</integer></dict>
+        <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>3</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>3</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>3</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>3</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Weekday</key><integer>6</integer><key>Hour</key><integer>3</integer><key>Minute</key><integer>30</integer></dict>
+    </array>
+</dict>
+</plist>

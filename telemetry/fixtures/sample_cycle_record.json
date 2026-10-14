@@ -1,0 +1,289 @@
+{
+  "calibration": {
+    "caught_by": [
+      1,
+      3
+    ],
+    "missed_by": [
+      2
+    ],
+    "plant_id": "plant-r8-missing-measurement-2026-08-27",
+    "planted_in": "trade-plumbing",
+    "slot": 1
+  },
+  "cost": {
+    "matched_rows": 11,
+    "source": "spend_ledger",
+    "total_tokens": 123987452,
+    "total_usd": 64.82,
+    "window": {
+      "end": "2026-08-27T17:48:56Z",
+      "start": "2026-08-27T14:02:11Z",
+      "tolerance_sec": 600.0
+    }
+  },
+  "cycle_id": "sample-first-run-2026-08-27",
+  "dispatches": [
+    {
+      "agent_type": "trade-electrical",
+      "batch_position": 1,
+      "batch_size": 9,
+      "cost_usd": null,
+      "duration_ms": 180000,
+      "label": "gc-loop-finder-pass",
+      "model": "claude-sonnet-5",
+      "tokens_total": 612984,
+      "tool_calls": 14
+    },
+    {
+      "agent_type": "trade-plumbing",
+      "batch_position": 2,
+      "batch_size": 9,
+      "cost_usd": null,
+      "duration_ms": 189000,
+      "label": "gc-loop-finder-pass",
+      "model": "claude-sonnet-5",
+      "tokens_total": 498221,
+      "tool_calls": 15
+    },
+    {
+      "agent_type": "trade-hvac",
+      "batch_position": 3,
+      "batch_size": 9,
+      "cost_usd": null,
+      "duration_ms": 198000,
+      "label": "gc-loop-finder-pass",
+      "model": "claude-sonnet-5",
+      "tokens_total": 355407,
+      "tool_calls": 16
+    },
+    {
+      "agent_type": "trade-carpentry",
+      "batch_position": 4,
+      "batch_size": 9,
+      "cost_usd": null,
+      "duration_ms": 207000,
+      "label": "gc-loop-finder-pass",
+      "model": "claude-sonnet-5",
+      "tokens_total": 289663,
+      "tool_calls": 17
+    },
+    {
+      "agent_type": "trade-drywall",
+      "batch_position": 5,
+      "batch_size": 9,
+      "cost_usd": null,
+      "duration_ms": 216000,
+      "label": "gc-loop-finder-pass",
+      "model": "claude-sonnet-5",
+      "tokens_total": 402118,
+      "tool_calls": 18
+    },
+    {
+      "agent_type": "trade-flooring",
+      "batch_position": 6,
+      "batch_size": 9,
+      "cost_usd": null,
+      "duration_ms": 225000,
+      "label": "gc-loop-finder-pass",
+      "model": "claude-sonnet-5",
+      "tokens_total": 331590,
+      "tool_calls": 19
+    },
+    {
+      "agent_type": "trade-paint",
+      "batch_position": 7,
+      "batch_size": 9,
+      "cost_usd": null,
+      "duration_ms": 234000,
+      "label": "gc-loop-finder-pass",
+      "model": "claude-sonnet-5",
+      "tokens_total": 244877,
+      "tool_calls": 20
+    },
+    {
+      "agent_type": "trade-tile",
+      "batch_position": 8,
+      "batch_size": 9,
+      "cost_usd": null,
+      "duration_ms": 243000,
+      "label": "gc-loop-finder-pass",
+      "model": "claude-sonnet-5",
+      "tokens_total": 275960,
+      "tool_calls": 21
+    },
+    {
+      "agent_type": "trade-site",
+      "batch_position": 9,
+      "batch_size": 9,
+      "cost_usd": null,
+      "duration_ms": 252000,
+      "label": "gc-loop-finder-pass",
+      "model": "claude-sonnet-5",
+      "tokens_total": 383811,
+      "tool_calls": 22
+    },
+    {
+      "agent_type": "consolidator",
+      "batch_position": 1,
+      "batch_size": 1,
+      "cost_usd": null,
+      "duration_ms": 95000,
+      "label": "gc-loop-consolidate",
+      "model": "claude-opus-4-8",
+      "tokens_total": 561108,
+      "tool_calls": 6
+    },
+    {
+      "agent_type": "verifier",
+      "batch_position": 1,
+      "batch_size": 1,
+      "cost_usd": null,
+      "duration_ms": 141000,
+      "label": "gc-loop-verify",
+      "model": "claude-opus-4-8",
+      "tokens_total": 329149,
+      "tool_calls": 9
+    }
+  ],
+  "ended_at": "2026-08-27T17:48:56Z",
+  "findings": [
+    {
+      "already_tracked_as": null,
+      "claim_cause": "scope-item generator dropped the appliance-circuit rule for this room type",
+      "claim_symptom": "panel schedule missing a dedicated 20A circuit for the disposal",
+      "consolidator_decision": "ACCEPT",
+      "fights_ruling": null,
+      "finding_id": "gc-loop-2026-08-27-f01",
+      "fix_status": "fixed",
+      "raised_by": [
+        "trade-electrical"
+      ],
+      "verifier_cause_upheld": true,
+      "verifier_verdict": "CONFIRMED"
+    },
+    {
+      "already_tracked_as": null,
+      "claim_cause": "claimed: the plumbing catalog row is unpublished for this tier",
+      "claim_symptom": "shower valve rough-in quantity is zero on a full shower replacement",
+      "consolidator_decision": "ACCEPT",
+      "fights_ruling": null,
+      "finding_id": "gc-loop-2026-08-27-f02",
+      "fix_status": "fixed",
+      "raised_by": [
+        "trade-plumbing"
+      ],
+      "verifier_cause_upheld": false,
+      "verifier_verdict": "CONFIRMED"
+    },
+    {
+      "already_tracked_as": null,
+      "claim_cause": "claimed: the HVAC crosswalk has no mapping for this duct material",
+      "claim_symptom": "bath fan duct run has no termination fitting priced",
+      "consolidator_decision": "ACCEPT",
+      "fights_ruling": null,
+      "finding_id": "gc-loop-2026-08-27-f03",
+      "fix_status": "fixed",
+      "raised_by": [
+        "trade-hvac",
+        "trade-carpentry"
+      ],
+      "verifier_cause_upheld": false,
+      "verifier_verdict": "PARTIALLY_CONFIRMED"
+    },
+    {
+      "already_tracked_as": "gc-loop-2026-08-20-f11",
+      "claim_cause": "claimed: drywall step never runs on a ceiling-only scope",
+      "claim_symptom": "ceiling patch after the fan relocation is unpriced",
+      "consolidator_decision": "REJECT",
+      "fights_ruling": null,
+      "finding_id": "gc-loop-2026-08-27-f04",
+      "fix_status": "duplicate",
+      "raised_by": [
+        "trade-drywall"
+      ],
+      "verifier_cause_upheld": false,
+      "verifier_verdict": "ALREADY_TRACKED_ELSEWHERE"
+    },
+    {
+      "already_tracked_as": "gc-loop-2026-08-19-f03",
+      "claim_cause": "claimed: flooring step only checks room-internal thresholds",
+      "claim_symptom": "LVP transition strip missing at the hallway threshold",
+      "consolidator_decision": "REJECT",
+      "fights_ruling": null,
+      "finding_id": "gc-loop-2026-08-27-f05",
+      "fix_status": "duplicate",
+      "raised_by": [
+        "trade-flooring"
+      ],
+      "verifier_cause_upheld": false,
+      "verifier_verdict": "ALREADY_TRACKED_ELSEWHERE"
+    },
+    {
+      "already_tracked_as": null,
+      "claim_cause": "claimed: paint step scopes to the repaired surface only",
+      "claim_symptom": "only the patched wall is painted, not the whole room",
+      "consolidator_decision": "CONTESTED",
+      "fights_ruling": "ruling-paint-full-room-on-repair",
+      "finding_id": "gc-loop-2026-08-27-f06",
+      "fix_status": "wontfix",
+      "raised_by": [
+        "trade-paint"
+      ],
+      "verifier_cause_upheld": false,
+      "verifier_verdict": "CONFIRMED"
+    },
+    {
+      "already_tracked_as": null,
+      "claim_cause": "claimed: perimeter should be inferred from floor area, not summed sides",
+      "claim_symptom": "shower perimeter looks too large next to the plan dimensions",
+      "consolidator_decision": "CONTESTED",
+      "fights_ruling": "ruling-shower-perimeter-is-sum-of-sides",
+      "finding_id": "gc-loop-2026-08-27-f07",
+      "fix_status": "wontfix",
+      "raised_by": [
+        "trade-tile"
+      ],
+      "verifier_cause_upheld": false,
+      "verifier_verdict": "CONFIRMED"
+    },
+    {
+      "already_tracked_as": null,
+      "claim_cause": "claimed: site step has no dependency edge on demo at all",
+      "claim_symptom": "dumpster line item ordered before the demo line item it depends on",
+      "consolidator_decision": "CONTESTED",
+      "fights_ruling": "ruling-r6-ordering-side-door-channels",
+      "finding_id": "gc-loop-2026-08-27-f08",
+      "fix_status": "open",
+      "raised_by": [
+        "trade-site"
+      ],
+      "verifier_cause_upheld": false,
+      "verifier_verdict": "PARTIALLY_CONFIRMED"
+    },
+    {
+      "already_tracked_as": null,
+      "claim_cause": "claimed: carpentry step never runs after a door relocation",
+      "claim_symptom": "trim allowance is missing for the relocated door",
+      "consolidator_decision": "REJECT",
+      "fights_ruling": null,
+      "finding_id": "gc-loop-2026-08-27-f09",
+      "fix_status": "rejected",
+      "raised_by": [
+        "trade-carpentry"
+      ],
+      "verifier_cause_upheld": false,
+      "verifier_verdict": "REFUTED"
+    }
+  ],
+  "notes": [
+    "SAMPLE FIXTURE -- encodes the real numbers from the first live run of this loop (see ~/.claude memory: project_gc_selfcorrecting_loop_2026_08_27.md and this module's docstring 'WHY cause_precision matters'). Not a live cycle; never read by aggregate reporting alongside real records because it lives under telemetry/fixtures/, not telemetry/cycles/.",
+    "A human read all 9 findings by hand and judged: 8/9 had a real symptom (symptom_precision), but only 1/9 had a correct root-cause diagnosis (cause_precision) -- that gap is the entire reason cause_precision exists as its own metric instead of folding into symptom_precision.",
+    "dispatches[].tokens_total sums to the workflow harness's own (unreliable, payload-ish) per-agent figure from that run -- ~4.28M. cost.total_tokens (~124M) is the SEPARATE, authoritative figure resolved from the real spend ledger (~/.claude/.agent_budget/spend.jsonl): the harness field undercounted real billed spend by roughly 26x, almost entirely cache_read tokens the harness field never saw. Trust cost.*, never dispatches[].tokens_total, for a dollar figure.",
+    "The calibration plant was seeded into the finder batch at batch_position 1, 2, and 3 (electrical, plumbing, hvac): caught at the first and last position, missed in the middle -- one real instance of a position-in-batch effect, not yet enough data to call it a pattern."
+  ],
+  "repo": "ExampleApp",
+  "schema_version": 1,
+  "started_at": "2026-08-27T14:02:11Z",
+  "system": "estimate-loop"
+}

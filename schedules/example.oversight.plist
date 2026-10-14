@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+    EXAMPLE launchd job definition — copy this file, rename it (its filename
+    must match the Label below), fill in every __PLACEHOLDER__, then:
+        cp example.oversight.plist ~/Library/LaunchAgents/com.oversight.__APP__.daily.plist
+        launchctl load ~/Library/LaunchAgents/com.oversight.__APP__.daily.plist
+
+    This is the SIMPLE shape: a scheduled oversight agent (sentinel, daily
+    sweep, weekly report, etc.) with no cross-run concurrency concerns. See
+    example.wheel.plist for the more involved shape THE ISSUE WHEEL needs
+    (repo-slug locking, fix/close feature gates).
+
+    Every job — simple or wheel — funnels through the SAME wrapper script,
+    run_oversight_job.sh. That wrapper, not the LLM session it launches, is
+    what guarantees a truthful heartbeat file exists the moment the process
+    exits, for any reason (clean finish, crash, hang-kill, usage-limit
+    death) — see that script's own header comment for why this exists.
+    Read it before writing your own plist; the contract below is a summary.
+
+    run_oversight_job.sh's positional argument contract (matches that
+    script's own header comment):
+        run_oversight_job.sh <job-label> <prompt-file> <cadence-text> [alarm-seconds]
+
+      job-label     Must equal this plist's own Label (below) — heartbeat
+                    files and lock ownership are both keyed on it. In this
+                    template: __JOB_LABEL__.
+      prompt-file   Path to the .txt prompt this job hands to `claude -p`.
+                    Point it at your own copy of schedules/prompts/ — every
+                    prompt there expects _preamble.txt's kill-switch +
+                    heartbeat contract to be read FIRST (see that file). In
+                    this template: __PROMPT_FILE__.
+      cadence-text  Free-text description of how often this job runs
+                    (e.g. "05:10 daily", "22:10 Mon-Fri") — stamped into the
+                    heartbeat for humans/heartbeat_audit.py to read; purely
+                    descriptive, does not control scheduling. In this
+                    template: __CADENCE_TEXT__.
+      alarm-seconds Hard hang-kill timeout in seconds (default 7200 = 2h).
+                    Raise it for a job whose prompt genuinely needs longer
+                    (THE ISSUE WHEEL's own jobs use 10800 = 3h).
+
+    OVERSIGHT_REPO / OVERSIGHT_SLUG (EnvironmentVariables, below): the
+    absolute path to this job's repo and its short slug, read by every
+    prompt's own REPO RESOLUTION block so the prompt can resolve
+    `<PRODUCT>`/paths from repo_manifest.py instead of a hardcoded literal.
+    In this template: __OVERSIGHT_REPO__ / __OVERSIGHT_SLUG__.
+    -->
+    <key>Label</key>
+    <string>com.oversight.__APP_SLUG__.__JOB_NAME__</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>exec /bin/bash "$HOME"/.claude/schedules/run_oversight_job.sh com.oversight.__APP_SLUG__.__JOB_NAME__ "$HOME"/.claude/schedules/prompts/__PROMPT_FILE__.txt "__CADENCE_TEXT__" __ALARM_SECONDS__</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <!-- The repo this job's agent should treat as its working tree —
+         its own CLAUDE.md, git state, and file-claim ledger all resolve
+         relative to this. -->
+    <string>__ABSOLUTE_PATH_TO_YOUR_REPO__</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <!-- launchd jobs get a minimal PATH — must include wherever `claude`,
+             `python3`, and `git` actually live on your machine. Check with
+             `which claude python3 git` in your normal shell first. -->
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>HOME</key>
+        <string>__ABSOLUTE_PATH_TO_YOUR_HOME__</string>
+        <key>OVERSIGHT_REPO</key>
+        <string>__OVERSIGHT_REPO__</string>
+        <key>OVERSIGHT_SLUG</key>
+        <string>__OVERSIGHT_SLUG__</string>
+        <!-- OVERSIGHT_PRIME_APP — OPTIONAL, omitted by default. Add a
+             <key>OVERSIGHT_PRIME_APP</key><string>SLUG</string> pair here, where
+             SLUG is a live-testing app slug (see `prime_browser_pool.sh --list`),
+             to have run_oversight_job.sh re-prime that app's staging browser-pool
+             jar immediately before the CLI starts. Set it ONLY on a job that
+             actually drives a browser: every other job would spend a staging
+             login per run for nothing, and the priming script also rebuilds the
+             SHARED pool jar of the owning repo as a side effect. Non-fatal — a
+             priming failure is recorded as the heartbeat's typed `prime_status`
+             key (ok/failed/skipped) and the job runs on. Card 44 / GH #5569.
+             The priming script itself is resolved through
+             ~/.claude/knowledge/repo_registry.json: add an OPTIONAL
+             <key>OVERSIGHT_PRIME_REPO</key><string>REGISTRY_SLUG</string> pair
+             to name the repo that owns scripts/prime_browser_pool.sh; when it is
+             omitted the wrapper uses the ONE registered repo whose root holds that
+             script as an executable. No match, several matches, an unknown slug
+             or an unreadable registry → the pre-flight is skipped (prime_status
+             "skipped") and the job's .err.log carries one line
+             "WRAPPER: prime pre-flight not run - <reason>". -->
+    </dict>
+    <key>StandardOutPath</key>
+    <string>__ABSOLUTE_PATH_TO_YOUR_HOME__/.claude/schedules/logs/com.oversight.__APP_SLUG__.__JOB_NAME__.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>__ABSOLUTE_PATH_TO_YOUR_HOME__/.claude/schedules/logs/com.oversight.__APP_SLUG__.__JOB_NAME__.err.log</string>
+    <key>StartCalendarInterval</key>
+    <!-- One dict = once/day at this Hour:Minute. Use an array of dicts (see
+         example.wheel.plist) for specific weekdays instead of every day. -->
+    <dict><key>Hour</key><integer>5</integer><key>Minute</key><integer>10</integer></dict>
+</dict>
+</plist>

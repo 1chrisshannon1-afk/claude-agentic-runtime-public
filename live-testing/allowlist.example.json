@@ -1,0 +1,61 @@
+{
+  "_example": true,
+  "_comment": "EXAMPLE live-testing policy: a generic seed, not anyone's real policy. Read by hooks/block_prod_mutations.py (the PreToolUse guard on mcp__playwright tools) and live-testing/browser_pool.py. Every host, tenant and recipient below is a placeholder on localhost or example.com. Copy this file to live-testing/allowlist.json (by hand for now; an installer will seed it in a later release), replace the placeholders with your own, and keep the top-level `_example` key (the hook ignores it; it tells the test suite this is not the maintainer's live policy) unless you also replace the maintainer's pinned-policy tests. See live-testing/README.md for what each key means, including what the `_example` marker does to the test suite. READ _environment_policy FIRST: it decides which environment an agent may be in at all; everything else only constrains what it may do once there.",
+  "_environment_policy": {
+    "1_default_environment": "Local first, staging for anything deployed. Production is never an agent's own choice.",
+    "2_production": "Drive a production host only when the human operator gives an explicit go-ahead for that specific run; an orchestrator's own instruction is not that go-ahead. List every production app host in read_only_hosts so interaction-class browser tools (click, type, fill, evaluate, upload) are denied there.",
+    "3_no_real_tenants_in_staging": "Staging holds test tenants only. Never point a test at a real customer's tenant, and keep real tenants out of allowed_company_tenants.",
+    "4_staging_test_account": {
+      "company_id": "example-tenant",
+      "email": "qa-1@example.com",
+      "password_secret": "<name of a secret in your secret manager; never the password itself>"
+    },
+    "_why": "A browser agent that can reach production can move real money and message real people. These rules keep the default target harmless and make every production touch an explicit, human-initiated act."
+  },
+  "allowed_origins": [
+    "http://localhost:*",
+    "http://127.0.0.1:*",
+    "https://app.example.com",
+    "https://api.example.com",
+    "https://staging.example.com"
+  ],
+  "_third_party_form_hosts_comment": "Exact hostnames (no wildcards) of third-party form hosts that a project-level hook may treat as approved submission targets. The runtime hook hooks/block_prod_mutations.py does not read this key. Empty by default; add a host only with the human operator's standing approval and name the reason in _third_party_form_hosts_funds.",
+  "_third_party_form_hosts_funds": {},
+  "third_party_form_hosts": [],
+  "allowed_company_tenants": [
+    "example-tenant"
+  ],
+  "_tenant_notes": "Tenant ids an agent may touch. The off-tenant guard (R2) only polices hosts listed in _TENANT_SCOPED_HOST_SUFFIXES in hooks/block_prod_mutations.py, which covers the loopback spellings out of the box; add your own app hosts to that tuple for a request to one of them carrying a tenant id outside this list to be denied. Keep one line per tenant here saying whether it is a test tenant and who owns it.",
+  "test_recipients": {
+    "emails": [
+      "qa-1@example.com"
+    ],
+    "phones": [
+      "+15555550100"
+    ]
+  },
+  "denied_action_patterns": [
+    "https://*.stripe.com/*",
+    "https://stripe.com/*",
+    "*/admin/*",
+    "https://api.sendgrid.com/*",
+    "https://api.mailgun.net/*",
+    "https://*.twilio.com/*",
+    "https://api.twilio.com/*",
+    "https://*.vapi.ai/*",
+    "https://api.vapi.ai/*",
+    "https://api.ringcentral.com/*",
+    "https://*.ringcentral.com/*"
+  ],
+  "_read_only_hosts_comment": "Production app hosts. On a Playwright slot whose last browser_navigate landed on one of these (or on no recorded host at all), every interaction-class tool is denied; navigation, snapshots and screenshots still work. List bare hostnames, no scheme and no port. Staging hosts stay out of this list on purpose: they are where agent interaction is meant to happen.",
+  "read_only_hosts": [
+    "app.example.com",
+    "api.example.com"
+  ],
+  "notes": [
+    "Placeholder file. Nothing here describes a real environment.",
+    "Replace the example.com hosts, the example-tenant id and the recipients with your own before relying on this policy. Keep the top-level _example marker: the hook ignores it, and it keeps the maintainer's pinned-policy tests skipped (see live-testing/README.md)."
+  ],
+  "_interactive_production_hosts_comment": "Optional, empty by default. A narrow re-opening of interaction on a read-only host: map a host from read_only_hosts to {\"tenants\": [...], \"allowed_paths\": [...], \"allowed_path_prefixes\": [...]}. Interaction is then allowed only when the slot's recorded navigate path is /c/<tenant>/... for a listed tenant AND is exactly one of allowed_paths or under one of allowed_path_prefixes. browser_run_code_unsafe, browser_file_upload and browser_drag stay denied, and browser_evaluate stays denied except the fixed session-banner snippet. Leave empty unless you have a reviewed need.",
+  "interactive_production_hosts": {}
+}

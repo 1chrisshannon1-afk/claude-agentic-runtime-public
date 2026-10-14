@@ -1,0 +1,176 @@
+{
+  "permissions": {
+    "allow": [],
+    "deny": [
+      "Read(~/.config/gcloud/application_default_credentials.json)",
+      "Read(~/.claude/.browser_pool/**)",
+      "Bash(cat *service-account-key*)",
+      "Bash(cat *personal-token*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(security find-generic-password:*)",
+      "Bash(op item get:*)",
+      "Bash(gh auth token:*)",
+      "Bash(gcloud auth print-access-token:*)",
+      "Bash(gcloud auth application-default print-access-token:*)",
+      "Bash(gcloud secrets versions access:*)",
+      "Bash(gh auth status --show-token:*)",
+      "Bash(gcloud auth print-identity-token:*)"
+    ],
+    "ask": [
+      "Bash(git checkout:*)",
+      "Bash(git switch:*)",
+      "Bash(git branch:*)",
+      "Bash(git worktree add:*)",
+      "Bash(git worktree remove:*)",
+      "Bash(git worktree move:*)",
+      "Bash(git worktree lock:*)",
+      "Bash(git worktree unlock:*)",
+      "Bash(git worktree)",
+      "Bash(git stash:*)",
+      "Bash(git push:*)",
+      "Bash(git push)",
+      "Bash(git reset --hard:*)",
+      "Bash(git rebase:*)",
+      "Bash(git filter-branch:*)",
+      "Bash(git clean:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(gh repo delete:*)",
+      "Bash(gh issue delete:*)",
+      "Bash(gh workflow run:*)",
+      "Bash(gcloud run deploy:*)",
+      "Bash(gcloud run services update:*)",
+      "Bash(gcloud run services delete:*)",
+      "Bash(gcloud run revisions delete:*)",
+      "Bash(gcloud projects delete:*)",
+      "Bash(gcloud secrets delete:*)",
+      "Bash(gcloud auth login:*)",
+      "Bash(gcloud config set account:*)",
+      "Bash(gcloud config set project:*)",
+      "Bash(bq rm:*)",
+      "Bash(firebase firestore:delete:*)",
+      "Bash(rm -rf:*)",
+      "Bash(rm -fr:*)",
+      "mcp__workspace__gmail_send",
+      "mcp__workspace__drive_share"
+    ],
+    "additionalDirectories": [
+      "~/.claude/plans"
+    ]
+  },
+  "model": "sonnet",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"${CSA_DISABLE_HOOKS:-0}\" = \"1\" ] && exit 0; bash ~/.claude/hooks/bash_gate.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"${CSA_DISABLE_HOOKS:-0}\" = \"1\" ] && exit 0; python3 ~/.claude/hooks/pretooluse_task.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Workflow",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"${CSA_DISABLE_HOOKS:-0}\" = \"1\" ] && exit 0; python3 ~/.claude/hooks/workflow_model_gate.py"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__playwright.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"${CSA_DISABLE_HOOKS:-0}\" = \"1\" ] && exit 0; python3 ~/.claude/hooks/agent_budget.py browser_pool status"
+          },
+          {
+            "type": "command",
+            "command": "[ \"${CSA_DISABLE_HOOKS:-0}\" = \"1\" ] && exit 0; python3 ~/.claude/hooks/block_prod_mutations.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"${CSA_DISABLE_HOOKS:-0}\" = \"1\" ] && exit 0; bash ~/.claude/hooks/post_bash_gate.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"${CSA_DISABLE_HOOKS:-0}\" = \"1\" ] && exit 0; python3 ~/.claude/hooks/agent_budget.py release_hook"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__playwright.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"${CSA_DISABLE_HOOKS:-0}\" = \"1\" ] && exit 0; python3 ~/.claude/hooks/redact_browser_phi.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"${CSA_DISABLE_HOOKS:-0}\" = \"1\" ] && exit 0; bash ~/.claude/hooks/post_bash_gate.sh"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"${CSA_DISABLE_HOOKS:-0}\" = \"1\" ] && exit 0; python3 ~/.claude/hooks/agent_budget.py release_hook"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"${CSA_DISABLE_HOOKS:-0}\" = \"1\" ] && exit 0; printf '[agent runtime] Contract: ~/.claude/CLAUDE.md (full text: OPERATING_CONTRACT.md). Non-negotiables: (1) path-scoped commits only (git commit -m ... -- <paths>); (2) no branch/stash/reset ops; (3) review before every commit (record_review.py); (4) parallel sub-agents only for independent work.\\n'"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"${CSA_DISABLE_HOOKS:-0}\" = \"1\" ] && exit 0; python3 ~/.claude/hooks/disk_pressure_check.py"
+          }
+        ]
+      }
+    ]
+  },
+  "_comment": "Wires the runtime's hooks: the Bash gate chain (bash_gate.sh -> hooks/pretooluse_bash.py), the Task and Workflow model-pin gates, the Playwright guards (copy live-testing/allowlist.example.json to allowlist.json before enabling enforcement, or the browser guard denies every write and click) and claim release; every hook no-ops when CSA_DISABLE_HOOKS=1. Gates are LOG-ONLY (they record what they would block in ~/.claude/.enforcement/log.jsonl and allow) until you set CSA_ENFORCE=1, create ~/.claude/.enforce, or add a .claude/.csa-enforce marker to a project. Opt-in hooks not wired here: hooks/settings_drift_guard.py (SessionStart; pins model/effortLevel to this file's committed values and removes an uncommitted modelSettings block) and the agent router (UserPromptSubmit -> hooks/agent_router.py, PostToolUse Write|Edit|MultiEdit -> hooks/agent_router_path.sh, Stop -> hooks/agent_obligations.py). Run the tests with: bash ~/.claude/hooks/run_tests.sh"
+}

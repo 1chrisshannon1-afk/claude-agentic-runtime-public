@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "product": {
+    "name": "ExampleApp",
+    "slug": "exampleapp"
+  },
+  "github": {
+    "repo": "your-org/your-repo",
+    "project_number": 1,
+    "project_owner": "your-org"
+  },
+  "oversight": {
+    "tracking_issue": null,
+    "report_dir": "~/.claude/plans/wheel/${slug}"
+  },
+  "tracker_doc": null,
+  "operator_input": null,
+  "gtm": {
+    "missions_dir": "docs/gtm_missions",
+    "inbox_label": "dept:marketing"
+  },
+  "wheel": {
+    "tier0_statuses": ["failed", "blocked", "notstarted"],
+    "tier1_statuses": ["local"],
+    "estimate_loop_exclusive_prefixes": [],
+    "trust_surface_prefixes": [],
+    "mandatory_registration_paths": [],
+    "venv_python": ".venv/bin/python",
+    "board_regen_command": null
+  },
+  "security": {
+    "auth_cookie_names": [],
+    "extra_risk_keywords": []
+  }
+}

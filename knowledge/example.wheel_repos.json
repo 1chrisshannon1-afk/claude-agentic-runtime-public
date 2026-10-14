@@ -1,0 +1,10 @@
+{
+  "_comment": "TEMPLATE for THE ISSUE WHEEL's per-slug config. Copy this file to knowledge/wheel_repos.json (kept out of the public mirror via .mirror/config.json's include allowlist — it is local install config, not something you'd want republished) and add one top-level key per repo you run the wheel against, keyed by that repo's own WHEEL_SLUG. Read by schedules/prompts/issue_wheel.txt (keyed by WHEEL_SLUG) and by the on-demand wheel invocation's own env-export step. A WHEEL_SLUG with no matching key here is a fail-loud stop, the same class of failure as an unset WHEEL_REPO -- issue_wheel.txt refuses to guess. Field meanings: estimate_loop_exclusive_prefixes (path prefixes reserved for a separate, exclusive workstream this wheel should never touch even when triaging an issue that names one -- leave empty if you have no such carve-out); trust_surface_prefixes (path prefixes that route the fix-phase review to a security/trust-tier reviewer INSTEAD OF the generic code-reviewer -- substitution, never stacking; see CLAUDE.md's own trust-surface-commit rule for the pattern); mandatory_registration_paths (a path a new test directory must ALSO be registered into, or your own test harness silently won't collect it -- leave empty if your harness has no such registration step); venv_python (the Python interpreter path the fix phase uses when running your repo's tests inside an isolated worktree -- relative to WHEEL_REPO); board_regen_command (a shell command that regenerates your status-tracker doc from source data, or null if it's hand-edited HTML/markdown with no regen step). tier0_statuses/tier1_statuses were RETIRED 2026-09-20 (THE ISSUE WHEEL plan, Phase C item 4) — issue_wheel_queue.py's --tracker-rel CLI flag is now optional and omitted by issue_wheel.txt's own P4 command, so these two fields are no longer read; do not add them to a new slug's block.",
+  "__YOUR_REPO_SLUG__": {
+    "estimate_loop_exclusive_prefixes": [],
+    "trust_surface_prefixes": [],
+    "mandatory_registration_paths": [],
+    "venv_python": ".venv/bin/python",
+    "board_regen_command": null
+  }
+}

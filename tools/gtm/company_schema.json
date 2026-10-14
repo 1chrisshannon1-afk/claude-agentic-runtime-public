@@ -1,0 +1,145 @@
+{
+  "$comment": "Documents every company.json key (plan §3.3 + §20 additions). This file is DOCUMENTATION read by humans and by company.py's error messages; the actual validation logic is hand-written stdlib Python in company.py (no jsonschema dependency) — see validate_company() there. Keys not listed here are unknown and refused by company.py validate.",
+  "$registries_comment": "A company home is resolved from ~/.claude/knowledge/gtm_company_registry.json FIRST (a GTM-only, machine-local registry — {\"schema_version\":1,\"companies\":{\"<slug>\":{\"root\":\"<path>\"}}} — written only via `company.py register`/`unregister`, for a home with no GitHub remote, since scripts/repo_manifest.py's own `register` refuses those), then ~/.claude/knowledge/repo_registry.json for a slug not already in the GTM registry (CSA/Agency keep resolving there). A slug in BOTH registries is INVALID.",
+  "schema_version": "int, required. Currently 1.",
+  "slug": "string, required. Must match the registry key used to resolve this pack.",
+  "legal_name": "string, required.",
+  "display_names": "list[string], required (may be empty).",
+  "business_model": "string enum, required: local_service | b2b_saas | ecommerce | other.",
+  "brands": [
+    {
+      "id": "string, required, unique within brands[].",
+      "display_name": "string, required.",
+      "domains": "list[string], optional.",
+      "phones": "list[string], optional.",
+      "booking_url": "string, optional.",
+      "nap": {"name": "string", "address": "string", "phone": "string"}
+    }
+  ],
+  "persona_file": "string (home-relative or knowledge/-relative path), required.",
+  "timezone": "IANA tz string, required.",
+  "quiet_hours": {"start": "HH:MM", "end": "HH:MM"},
+  "goals": {
+    "north_star_metric": "string metric id, required.",
+    "guardrail_metrics": "list[string metric id], optional."
+  },
+  "scope": {
+    "local_seo": "bool, required.",
+    "channels_in_scope": "list[string], required.",
+    "channels_out_of_scope": [
+      {"channel": "string", "reason": "string", "ruling_ref": "string"}
+    ]
+  },
+  "accounts": [
+    {
+      "system": "string, required.",
+      "brand": "string, required (must reference a brands[].id).",
+      "account_id": "string, required.",
+      "access": "string enum: api | browser | operator_only.",
+      "credential_ref": "string, required. Shape 'gsm:<name>' | 'browser:<server>' | 'none', where <name> is [A-Za-z0-9_-]+ and <server> is LOWERCASE-ONLY [a-z0-9-]+ (an uppercase server name like 'browser:Playwright-GTM' does NOT match and is INVALID). A credential_ref value (other than 'none') that appears in more than one registered pack is INVALID.",
+      "$comment_extra_keys": "accounts[] entries MAY carry additional, system-specific keys beyond the ones above -- the validator accepts them silently (free-form extension, never itself validated). Real examples from the Brightline pack fixture, by system: google_ads: ocid, conversion_id, conversion_labels (list[string]), call_conversion_number; gtm: gtm_account_id, gtm_container_id; ga4: ga4_account_id, ga4_property_id; gbp: store_code; facebook: asset_id. These are read by downstream tooling (e.g. host_systems path-scoping, ad-platform conversion wiring) that knows to look for them on a given system's account entry -- they are documentation-by-example here, not an enumerated/closed key list."
+    }
+  ],
+  "identity_allowlist": {
+    "facebook_page_ids": "list[string]",
+    "instagram_ids": "list[string]",
+    "gbp_location_ids": "list[string]",
+    "ads_customer_ids": "list[string]",
+    "meta_ad_account_ids": "list[string]",
+    "ga4_property_ids": "list[string]",
+    "gtm_container_ids": "list[string]",
+    "domains": "list[string]",
+    "listing_urls": "list[string]"
+  },
+  "claims_policy": {
+    "terms": [
+      {"regex": "string, required.", "rule": "string enum: no_new | forbid_any, required.", "ruling_ref": "string, required."}
+    ],
+    "never_claim_file": "string (home-relative path), optional."
+  },
+  "shared_identifiers": [
+    {
+      "value": "string, required.",
+      "with": "string (another pack's slug), required.",
+      "relationship": "string, required.",
+      "ruling_ref": "string, required.",
+      "source": "string, required."
+    }
+  ],
+  "ai_content_policy": {
+    "mode": "string enum: disclose_never_strip | strip_before_publish | forbid, required.",
+    "surfaces_forbidden": "list[string], optional.",
+    "disclosure_caption_line": "string, required when mode == disclose_never_strip.",
+    "caps": {"feed_28d_max": "int"}
+  },
+  "autonomy": {
+    "level": "string enum, required: shadow | autonomous (per §20.6, superseding the earlier advisory|shadow|semi|autonomous ladder).",
+    "system_overrides": "object, optional.",
+    "standing_approvals": [
+      {
+        "id": "string, required.",
+        "verbatim": "string, required.",
+        "ts": "string, required.",
+        "rows": "list[string tier_table.json row id], required. A bare '*' wildcard anywhere in this list is INVALID."
+      }
+    ]
+  },
+  "spend": {
+    "currency": "string, required.",
+    "monthly_cap_total": "number, required.",
+    "per_channel_monthly_cap": "object, optional.",
+    "max_weekly_realloc_pct": "number, optional.",
+    "cap_ruling_ref": "string, required."
+  },
+  "budget": {
+    "weekly_usd_cap_opus": "number, required.",
+    "weekly_usd_cap_sonnet": "number, required.",
+    "dispatch_caps_per_run": {
+      "inbox": "int",
+      "daily": "int",
+      "weekly": "int",
+      "monthly": "int",
+      "mission": "int",
+      "monthly_load": "int, required (§20.6/§14 P0 schema addition)."
+    }
+  },
+  "operator_input": "string, required. 'from_manifest' means authoritative = the home's manifest.json operator_input.",
+  "inbox": "string enum, required: github_label | local_jsonl.",
+  "lead_sink": {"kind": "string enum: google_sheet | app_crm | none", "ref": "string"},
+  "cadence": {
+    "inbox_checks": "list[HH:MM string], required.",
+    "weekly_day": "string (e.g. SAT), required.",
+    "monthly_day": "int, required.",
+    "monthly_load_day": "string, required (e.g. 'last_weekday')."
+  },
+  "paths": {
+    "missions_dir": "string, required (home-relative).",
+    "mission_records": "string enum, required: tracked | ignored.",
+    "activity_log_dir": "string, required (home-relative). Default: .claude/gtm/state/activity_log",
+    "scoreboard": "string, required (home-relative file path).",
+    "snapshots_dir": "string, required (home-relative).",
+    "metrics": "string, required (home-relative file path). NEVER ignored by `company.py gitignore` — §3.2 tracks metrics.json/METRICS.md.",
+    "feature_inventory_dir": "string, required (home-relative). NEVER ignored, even when nested under activity_log_dir.",
+    "plans_dir": "string, required (home-relative).",
+    "data_dir": "string, required (home-relative).",
+    "build_dir": "string, optional (home-relative). When set, build_dir/** is ignored by `company.py gitignore` (build output, e.g. Brightline's tracking/build/).",
+    "_relative_path_rule": "EVERY paths.* value (except mission_records, which is an enum not a path) must be relative to the company home: no leading '/' or '~', and no '..' path component anywhere. An absolute or escaping path is INVALID."
+  },
+  "class_o_batches": "list[string], optional (§6.4 R9 Class O batch ids).",
+  "mirror_dir": "string, optional (home-relative or absolute path for owner-facing mirrors).",
+  "mirror_basename": "string, optional. Base filename (no extension) for the owner-facing mirror files written into mirror_dir — <mirror_basename>.md and <mirror_basename>.html. Default: '<legal_name-or-slug title-cased with spaces>_Activity_Log' (e.g. Brightline's is literally 'Brightline_Activity_Log', matching the pre-migration file the operator already uses at ~/Desktop/Brightline/Brightline_Activity_Log.html). Only meaningful when mirror_dir is set.",
+  "mirror_title": "string, optional. The mirror's page/header title (e.g. 'Brightline Activity Log', matching display_names[0] + ' Activity Log' for the Brightline migration exactly). Default: display_names[0] (falling back to legal_name, never the lowercase slug) + ' Activity Log'. Only meaningful when mirror_dir is set.",
+  "regulated": "list[string], optional. Only value ever valid today: 'hipaa' (§20.5). Any other value is INVALID.",
+  "host_systems": "object, optional: {host_glob: system}. 'host_glob' is a plain host/domain string (suffix-matched exactly like harvest_tool_trail.py's DEFAULT_HOST_SYSTEMS — 'glob' here describes the matching behavior, never fnmatch syntax), checked BEFORE the runtime defaults so a pack can override or extend the default host->system mapping for its own domains (e.g. {\"business.google.com\": \"gbp_remodeling\", \"facebook.com\": \"facebook_remodeling\", \"example-remodeling.com\": \"website_remodeling\"}). Every value must be a member of this pack's own system set (scope.channels_in_scope union the runtime's fixed extras — the same union activity_log.py's SYSTEMS computes) — an unregistered system name is INVALID. #27 CAVEAT: host_systems is HOST-LEVEL ONLY by default — a plain host key cannot tell two brands apart when they share a host (e.g. two sibling brands of the same company both using business.google.com and facebook.com). For that, a key MAY instead be `<host>/<path-prefix>` (e.g. \"business.google.com/9000000000000000001\", a GBP location id, or \"facebook.com/100000000000001\", a Facebook Page id) — despite the name 'path-prefix', this is NOT a prefix match: the id is matched when it appears at a token boundary (not immediately preceded or followed by another alphanumeric character) ANYWHERE in the URL's path or query string, checked BEFORE any plain host-only entry for the same host, so the more specific mapping always wins. A plain host-only entry, if also present, is the fallback when no path-prefix entry's id appears in the URL. If more than one path-prefix entry's id matches the same URL (e.g. both brands' ids appear in it), the FIRST matching entry in this object's own key insertion order wins.",
+  "co_managing_systems": [
+    {
+      "system": "string, required.",
+      "identity": "string, required.",
+      "interface": "string, required (e.g. 'api' | 'web_ui' — which surface the co-managing identity uses, per §20.13's identity+interface keying for change-history attribution).",
+      "mode": "string enum, required: read_only (the only value ever valid today — a co-managing identity is never a writer per §20.9's Model A decision).",
+      "ruling_ref": "string, required."
+    }
+  ],
+  "legacy_workdirs": "list of strings, optional. Absolute (or ~/) paths of directories where this company's GTM sessions ran BEFORE its home was registered (no '..'). harvest_tool_trail adds their Claude Code project dirs to its default transcript search so pre-migration sessions are still attributed. Private to the pack; the runtime code never hardcodes a company path.",
+  "shared_identifiers_note": "See shared_identifiers above — repeated here because §20.9 also cites it for the Agency co-managing relationship."
+}

@@ -1,0 +1,239 @@
+[
+  {
+    "raw": "https://admin-staging.example.com\\api\\x",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com:443\\api\\x",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/api\\x",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com\\/api/x",
+    "host": "admin-staging.example.com",
+    "pathname": "//api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-sta\tging.example.com/api/x",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/ap\ti/x",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/api/x\n",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/a\rpi/x",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/api\n/x",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "   https://admin-staging.example.com/api/x",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/api/x   ",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "\u0001https://admin-staging.example.com/api/x",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "HTTPS://ADMIN-STAGING.EXAMPLE.COM/API/X",
+    "host": "admin-staging.example.com",
+    "pathname": "/API/X",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com:8443/api/x",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "8443",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com//api/x",
+    "host": "admin-staging.example.com",
+    "pathname": "//api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/./api/x",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/a/../api/x",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/%61pi/x",
+    "host": "admin-staging.example.com",
+    "pathname": "/%61pi/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/api/v1%2f..%2f..%2fout",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/v1%2f..%2f..%2fout",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/health",
+    "host": "admin-staging.example.com",
+    "pathname": "/health",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/health/",
+    "host": "admin-staging.example.com",
+    "pathname": "/health/",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/health?x=1",
+    "host": "admin-staging.example.com",
+    "pathname": "/health",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin\u0001-staging.example.com/api/x",
+    "ok": false,
+    "error": "Invalid URL"
+  },
+  {
+    "raw": "https://admin-staging.example.com:\u001f8443/api/x",
+    "ok": false,
+    "error": "Invalid URL"
+  },
+  {
+    "raw": "https://admin-staging.example.com:\u0000443/api/x",
+    "ok": false,
+    "error": "Invalid URL"
+  },
+  {
+    "raw": "https://admin-staging.example.com/api\u001f/x",
+    "host": "admin-staging.example.com",
+    "pathname": "/api%1F/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/api/x?q=\u001f1",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/api/x#\u001ffrag",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/api/x\u007f",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/x%7F",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin\u007f-staging.example.com/api/x",
+    "ok": false,
+    "error": "Invalid URL"
+  },
+  {
+    "raw": "https://admin-staging.example.com/admin//..",
+    "host": "admin-staging.example.com",
+    "pathname": "/admin/",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/api//..",
+    "host": "admin-staging.example.com",
+    "pathname": "/api/",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/a/../admin/x",
+    "host": "admin-staging.example.com",
+    "pathname": "/admin/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/admin/./x",
+    "host": "admin-staging.example.com",
+    "pathname": "/admin/x",
+    "port": "",
+    "ok": true
+  },
+  {
+    "raw": "https://admin-staging.example.com/admin/x/..",
+    "host": "admin-staging.example.com",
+    "pathname": "/admin/",
+    "port": "",
+    "ok": true
+  }
+]

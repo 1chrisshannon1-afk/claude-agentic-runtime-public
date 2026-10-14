@@ -1,0 +1,321 @@
+# Project metadata and tool configuration for the runtime.
+#
+# This is NOT an installable package: `packages = []` below, and CI never runs
+# `pip install .`. The file exists so that (a) the test dependencies have one
+# declared home, (b) ruff and pytest have one shared configuration, and (c)
+# GitHub / pip tooling can read the project's name, version and licence.
+#
+# Version bumps: change `version` here and add a CHANGELOG.md entry in the same
+# commit.
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "claude-agentic-runtime"
+version = "0.2.0"
+description = "Hook-enforced guardrails, review gates and a role-scoped agent roster for Claude Code."
+license = "MIT"
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+# Exactly what the test suite imports or shells out to:
+#   pytest, pytest-cov  - the runner and `hooks/run_tests.sh`'s optional coverage
+#   jsonschema          - imported at module level by hooks/tests/test_cycle_telemetry.py
+#   detect-secrets      - the binary scripts/codex_review.sh requires on PATH;
+#                         pinned to the version that script documents and that
+#                         scripts/ci_layout.sh installs, so the two never drift
+test = [
+    "pytest>=8",
+    "pytest-cov",
+    "jsonschema",
+    "detect-secrets==1.5.0",
+]
+# The linter. Kept apart from `test` so a test-only environment stays small;
+# scripts/ci_layout.sh installs both. Pinned EXACTLY, and to the same version
+# in scripts/ci_layout.sh (PACKAGES) and .pre-commit-config.yaml (the
+# ruff-pre-commit `rev`), because the format-exclude list below is the output
+# of this one version's formatter: a different ruff reformats a different set
+# of files. hooks/tests/test_packaging_pins.py fails when the three disagree.
+lint = [
+    "ruff==0.15.18",
+]
+
+[tool.setuptools]
+# Not a package: the runtime is a directory of scripts, hooks and documents.
+packages = []
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+# Peer-contested paths are excluded until the session that holds them has
+# landed its work; each is listed in CHANGELOG.md "Known gaps" and is removed
+# from this list when its window opens. The non-Python contested files
+# (scripts/codex_review.sh, docs/subsystems/codex-review.md) need no entry here.
+extend-exclude = [
+    # Staged by another live session; carries E741/F541/F841 today.
+    "hooks/tests/test_repo_manifest.py",
+    # Staged by another live session (codex review harness and its canary).
+    "hooks/tests/test_codex_canary.py",
+    "hooks/tests/test_codex_review.py",
+    # Staged by another live session (repository manifest CLI).
+    "scripts/repo_manifest.py",
+    # Superseded shell guards and their shell tests, kept for reference; not
+    # maintained and not exported. Holds no Python today; the entry keeps any
+    # Python added there out of the lint until the directory is retired.
+    "scripts/legacy/",
+    # Skill bundles synced into this machine by the Claude Code client, and the
+    # client's trash for removed ones. Untracked third-party code, never part
+    # of the repository or the export; a local `ruff check .` would lint it.
+    "skills/synced/",
+    "skills/.trash/",
+]
+
+[tool.ruff.lint]
+# Ruff's own default rule set, spelled out so a ruff upgrade cannot silently
+# widen it: pycodestyle E4 (imports), E7 (statements), E9 (syntax/runtime
+# errors) and pyflakes F. A wider set (I, B, UP, E501) is a measured follow-up.
+select = ["E4", "E7", "E9", "F"]
+
+[tool.ruff.format]
+# Formatting is deferred (operator decision, 2026-10-12): the one-off
+# `ruff format` pass over the whole tree lands as a single dedicated commit.
+# Until then the files that pass would change are listed so that
+# `ruff format --check` is green for everything else. The list is generated,
+# never hand-edited, and only with the ruff version pinned in the `lint` extra
+# above (`ruff --version` must say 0.15.18). To regenerate it, empty it
+# (`exclude = []`) and run
+#   out=$(git ls-files -z '*.py' | xargs -0 ruff format --check --force-exclude --no-cache 2>&1)
+#   printf '%s\n' "$out" | sed -n 's/^Would reformat: //p' | sort | grep . \
+#     || { echo "no 'Would reformat:' lines: list not emptied, ruff errored, or its output changed" >&2; false; }
+# The `grep .` makes an empty result a failure instead of a silently empty
+# list. Paste the sorted result back. Remove an entry as soon as its file is
+# formatted. Files in [tool.ruff] extend-exclude are skipped by both tools and
+# never need an entry here.
+exclude = [
+    "account_rotation/alerts.py",
+    "account_rotation/browser.py",
+    "account_rotation/burn.py",
+    "account_rotation/cli_login.py",
+    "account_rotation/credential.py",
+    "account_rotation/logging_utils.py",
+    "account_rotation/orchestrator.py",
+    "account_rotation/page_selectors.py",
+    "account_rotation/probe_step0.py",
+    "account_rotation/resolver.py",
+    "account_rotation/rotate.py",
+    "account_rotation/seed.py",
+    "account_rotation/state_store.py",
+    "account_rotation/tests/conftest.py",
+    "account_rotation/tests/test_alerts.py",
+    "account_rotation/tests/test_b1_exception_scrubbing_end_to_end.py",
+    "account_rotation/tests/test_b1_step_wrapper_exception_safety.py",
+    "account_rotation/tests/test_browser.py",
+    "account_rotation/tests/test_browser_flow.py",
+    "account_rotation/tests/test_burn.py",
+    "account_rotation/tests/test_cli_login.py",
+    "account_rotation/tests/test_credential.py",
+    "account_rotation/tests/test_heartbeat.py",
+    "account_rotation/tests/test_no_logout_and_rollback.py",
+    "account_rotation/tests/test_orchestrator.py",
+    "account_rotation/tests/test_orchestrator_switch_flow.py",
+    "account_rotation/tests/test_probe_step0.py",
+    "account_rotation/tests/test_protect_profile.py",
+    "account_rotation/tests/test_r6_invariant.py",
+    "account_rotation/tests/test_r7_fixes.py",
+    "account_rotation/tests/test_resolver.py",
+    "account_rotation/tests/test_rotate_cli.py",
+    "account_rotation/tests/test_safety_backstop.py",
+    "account_rotation/tests/test_sentinel_leak.py",
+    "account_rotation/tests/test_simulation_14day.py",
+    "account_rotation/tests/test_state_store.py",
+    "account_rotation/tests/test_stay.py",
+    "account_rotation/tests/test_switch_impl_circuit_and_rollback.py",
+    "account_rotation/tests/test_usage.py",
+    "account_rotation/usage.py",
+    "hooks/_lib.py",
+    "hooks/agent_budget.py",
+    "hooks/agent_obligations.py",
+    "hooks/agent_router.py",
+    "hooks/agent_telemetry.py",
+    "hooks/agentarch_metric_check.py",
+    "hooks/audit_review_attribution.py",
+    "hooks/block_gcloud_identity.py",
+    "hooks/block_head_overwrite.py",
+    "hooks/block_prod_mutations.py",
+    "hooks/bundle_parity.py",
+    "hooks/check_safety_core_parity.py",
+    "hooks/check_staged_scope.py",
+    "hooks/check_workflow_agent_purity.py",
+    "hooks/churn_report.py",
+    "hooks/churn_tracker.py",
+    "hooks/claude_md_rule_net.py",
+    "hooks/cycle_budget.py",
+    "hooks/cycle_telemetry.py",
+    "hooks/daily_spend_rollup.py",
+    "hooks/delivery_report.py",
+    "hooks/doc_citation_check.py",
+    "hooks/file_claims.py",
+    "hooks/heartbeat_artifact_stamp.py",
+    "hooks/heartbeat_audit.py",
+    "hooks/issue_create_observer.py",
+    "hooks/issue_wheel_queue.py",
+    "hooks/model_pin_gate.py",
+    "hooks/model_pin_parity.py",
+    "hooks/pre_commit_ratchet.py",
+    "hooks/precommit_review_gate.py",
+    "hooks/pretooluse_bash.py",
+    "hooks/record_model_exception.py",
+    "hooks/record_plan_review.py",
+    "hooks/record_review.py",
+    "hooks/redact_browser_phi.py",
+    "hooks/review_risk_tier.py",
+    "hooks/runtime_mirror_sync.py",
+    "hooks/spend_attribution.py",
+    "hooks/tests/precommit_review_mutation_battery.py",
+    "hooks/tests/test_agent_budget.py",
+    "hooks/tests/test_agent_descriptions.py",
+    "hooks/tests/test_agent_obligations.py",
+    "hooks/tests/test_agent_router.py",
+    "hooks/tests/test_agent_telemetry.py",
+    "hooks/tests/test_agentarch_metric_check.py",
+    "hooks/tests/test_audit_review_attribution.py",
+    "hooks/tests/test_block_gcloud_identity.py",
+    "hooks/tests/test_block_head_overwrite.py",
+    "hooks/tests/test_block_prod_mutations.py",
+    "hooks/tests/test_bundle_parity.py",
+    "hooks/tests/test_check_safety_core_parity.py",
+    "hooks/tests/test_check_staged_scope.py",
+    "hooks/tests/test_check_workflow_agent_purity.py",
+    "hooks/tests/test_churn_report.py",
+    "hooks/tests/test_churn_tracker.py",
+    "hooks/tests/test_claude_md_rule_net.py",
+    "hooks/tests/test_commit_authors.py",
+    "hooks/tests/test_cycle_budget.py",
+    "hooks/tests/test_cycle_log_freshness.py",
+    "hooks/tests/test_cycle_telemetry.py",
+    "hooks/tests/test_daily_spend_rollup.py",
+    "hooks/tests/test_delivery_report.py",
+    "hooks/tests/test_doc_citation_check.py",
+    "hooks/tests/test_file_claims.py",
+    "hooks/tests/test_gh_issue_close_gate.py",
+    "hooks/tests/test_gh_issue_create_dupe_search_failure.py",
+    "hooks/tests/test_gh_issue_create_priority.py",
+    "hooks/tests/test_gh_issue_evidence_repo.py",
+    "hooks/tests/test_gh_issue_transition_field_query.py",
+    "hooks/tests/test_gitignore_corpus_protection.py",
+    "hooks/tests/test_heartbeat_artifact_stamp.py",
+    "hooks/tests/test_heartbeat_audit.py",
+    "hooks/tests/test_init_repo.py",
+    "hooks/tests/test_issue_create_observer.py",
+    "hooks/tests/test_issue_wheel_queue.py",
+    "hooks/tests/test_lane_cleanup_update.py",
+    "hooks/tests/test_lane_orphans.py",
+    "hooks/tests/test_lane_sh.py",
+    "hooks/tests/test_lib.py",
+    "hooks/tests/test_log_identity.py",
+    "hooks/tests/test_mirror_sync_dry_run.py",
+    "hooks/tests/test_mirror_sync_status.py",
+    "hooks/tests/test_model_pin_gate.py",
+    "hooks/tests/test_model_pin_parity.py",
+    "hooks/tests/test_posttooluse_bash.py",
+    "hooks/tests/test_pre_commit_ratchet.py",
+    "hooks/tests/test_precommit_review_gate.py",
+    "hooks/tests/test_pretooluse_bash.py",
+    "hooks/tests/test_priority_backfill.py",
+    "hooks/tests/test_protected_board_guard.py",
+    "hooks/tests/test_record_plan_review.py",
+    "hooks/tests/test_record_review.py",
+    "hooks/tests/test_redact_browser_phi.py",
+    "hooks/tests/test_render_cycle_log.py",
+    "hooks/tests/test_replay_review_rounds.py",
+    "hooks/tests/test_run_oversight_job.py",
+    "hooks/tests/test_run_watchdog.py",
+    "hooks/tests/test_runtime_mirror_sync.py",
+    "hooks/tests/test_settings_drift_guard.py",
+    "hooks/tests/test_spend_attribution.py",
+    "hooks/tests/test_sync_agent_rules.py",
+    "hooks/tests/test_task_completion_gate.py",
+    "hooks/tests/test_validate_agentarch_ledger.py",
+    "hooks/tests/test_validate_research_ledger.py",
+    "hooks/tests/test_wheel_batch_validate.py",
+    "hooks/tests/test_wheel_history.py",
+    "hooks/tests/test_wheel_launch_context.py",
+    "hooks/tests/test_wheel_sink.py",
+    "hooks/tests/test_workflow_model_gate.py",
+    "hooks/validate_agentarch_ledger.py",
+    "hooks/validate_research_ledger.py",
+    "hooks/wheel_batch_validate.py",
+    "hooks/wheel_history.py",
+    "hooks/wheel_launch_context.py",
+    "hooks/wheel_sink.py",
+    "hooks/workflow_model_gate.py",
+    "live-testing/phi1_chat_verify.py",
+    "live-testing/tests/test_phi1_chat_verify.py",
+    "live-testing/tests/test_prod_proxy.py",
+    "schedules/tests/test_rule_g_batch_loss.py",
+    "scripts/kb_sync_report.py",
+    "scripts/priority_backfill.py",
+    "scripts/render_agent_telemetry.py",
+    "scripts/render_cycle_log.py",
+    "scripts/replay_review_rounds.py",
+    "skills/trim-memory/trim_memory.py",
+    "tools/gtm/activity_log.py",
+    "tools/gtm/backup_state.py",
+    "tools/gtm/company.py",
+    "tools/gtm/exit_contract.py",
+    "tools/gtm/harvest_tool_trail.py",
+    "tools/gtm/tests/test_activity_log.py",
+    "tools/gtm/tests/test_actor_shape_validation.py",
+    "tools/gtm/tests/test_backup_runtime_state_prefix.py",
+    "tools/gtm/tests/test_backup_set_completeness.py",
+    "tools/gtm/tests/test_backup_state.py",
+    "tools/gtm/tests/test_batch_append_sidecar_scalability.py",
+    "tools/gtm/tests/test_brightline_pack_fixture.py",
+    "tools/gtm/tests/test_check_blocks_during_flush.py",
+    "tools/gtm/tests/test_check_sidecar_drift.py",
+    "tools/gtm/tests/test_company_pack.py",
+    "tools/gtm/tests/test_corrupt_registry_error_handling.py",
+    "tools/gtm/tests/test_exemption_scoping.py",
+    "tools/gtm/tests/test_flush_many_scalability.py",
+    "tools/gtm/tests/test_gitignore_brightline_layout.py",
+    "tools/gtm/tests/test_gtm_company_registry.py",
+    "tools/gtm/tests/test_gtm_exit_contract.py",
+    "tools/gtm/tests/test_harvest_multiprocess.py",
+    "tools/gtm/tests/test_harvest_tool_trail.py",
+    "tools/gtm/tests/test_host_map_additions.py",
+    "tools/gtm/tests/test_host_systems.py",
+    "tools/gtm/tests/test_host_systems_validation.py",
+    "tools/gtm/tests/test_legacy_workdirs.py",
+    "tools/gtm/tests/test_lock_scope_not_blocking.py",
+    "tools/gtm/tests/test_lock_scope_sidecar_race.py",
+    "tools/gtm/tests/test_mirror_parity.py",
+    "tools/gtm/tests/test_nap_never_triggers_capture.py",
+    "tools/gtm/tests/test_no_real_company_identifiers.py",
+    "tools/gtm/tests/test_project_dir_name.py",
+    "tools/gtm/tests/test_secret_scan_false_positives.py",
+    "tools/gtm/tests/test_tail_read_and_sidecar.py",
+    "tools/gtm/tests/test_validator_additions.py",
+    "tools/gtm/tests/test_wildcard_and_secrets.py",
+]
+
+[tool.pytest.ini_options]
+# The runtime repo had NO pytest config at all, so the `live_machine` marker
+# raised PytestUnknownMarkWarning on every run and would ERROR under
+# --strict-markers (cold-review finding 8).
+#
+# `live_machine` marks SMOKE tests that deliberately opt out of the autouse
+# hermetic fixture and read this machine's real telemetry. That opt-out is
+# intentional and narrow: the defect class they exist to catch -- a panel that
+# dies only when data IS available -- is provably invisible to a hermetic
+# fixture. They skip themselves when the real sources are absent (CI, another
+# machine), so they never fail spuriously.
+#
+# They are SLOW (~4 min against the live store). Default runs exclude them:
+#     python3 -m pytest hooks/tests/ -q -m "not live_machine"
+# Run them explicitly before landing anything that touches the renderer:
+#     python3 -m pytest hooks/tests/ -q -m live_machine
+markers = [
+    "live_machine: reads this machine's real telemetry; opts out of the hermetic fixture; slow",
+]

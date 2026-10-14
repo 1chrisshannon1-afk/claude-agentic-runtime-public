@@ -1,0 +1,55 @@
+# Codex CLI config installed at ~/.codex/config.toml by
+# scripts/install_codex_config.sh (source of truth: this tracked file).
+#
+# Plan: plans/exampleapp/plan_lane_control_adoption_master_2026_09_20.md
+# §4.2-4.3, §9 rule 9. Read that file in full before editing this one.
+#
+# ============================================================================
+# THIS FILE IS NEVER LOADED BY scripts/codex_review.sh.
+# ============================================================================
+# Every invocation the wrapper makes passes --ignore-user-config, precisely
+# because this file lives on disk and could be silently widened by a future
+# `codex login` / upgrade / or a stray `-c` typed by a human at an interactive
+# prompt (plan §4.3: "the sandbox is config-overridable ... the wrapper must
+# not load it"). The wrapper hard-codes -m <model> on its own command line
+# instead of relying on the `model` key below.
+#
+# So why does this file exist and get installed at all?
+#   1. It is what `codex` (bare, interactive) and `codex login` read when the
+#      operator or anyone else runs the CLI directly, outside the wrapper --
+#      the wrapper's --ignore-user-config only affects the wrapper's own
+#      invocations, never other uses of the same installed binary.
+#   2. It documents, in the one place Codex itself reads, the model this repo
+#      wires it to and the wrapper's own read-only invocation shape, so the
+#      config isn't a silent unknown when someone runs `codex doctor` by hand.
+#   3. It is the artifact install_codex_config.sh's --force / diff-detection
+#      logic protects (plan: "refuses to overwrite a file that differs from
+#      the last version it installed without --force, so a Codex upgrade's
+#      rewrite is noticed, not clobbered").
+#
+# NEVER add here, ever, for any reason (plan §4.3 "Prohibited, permanently"
+# list — the same prohibition applies to this file even though the wrapper
+# does not load it, because an operator running bare `codex` interactively
+# WOULD pick this file up):
+#   - sandbox_permissions = ["disk-full-read-access"] (or any widening)
+#   - shell_environment_policy.inherit = "all" (or any inherit widening)
+#   - any MCP server registration (v1 forbids MCP servers, plan §4.2)
+#   - any network/tool grant beyond Codex's own defaults
+#
+# Model pin. Mirrors -m on the wrapper's own hard-coded command line (plan
+# §4.3); the two must be changed together if the model is ever changed. The
+# wrapper's -m always wins for wrapper-issued calls; this line governs only
+# direct/interactive use of the same installed binary.
+model = "gpt-5-codex"
+
+# Default sandbox for anything NOT going through the wrapper (e.g. the
+# operator running `codex` by hand). read-only is the least-privileged of the
+# three values codex exec --help lists (read-only | workspace-write |
+# danger-full-access). The wrapper passes -s read-only explicitly regardless
+# of this default and does not rely on it.
+sandbox_mode = "read-only"
+
+# No approval-bypass, no full-access default, no environment-inherit
+# widening. Everything not listed here is intentionally left at Codex's own
+# built-in default rather than restated -- restating a default here would
+# just be one more place a future edit could silently widen it.

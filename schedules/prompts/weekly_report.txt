@@ -1,0 +1,34 @@
+Read and obey ~/.claude/schedules/prompts/_preamble.txt first (JOB=com.oversight.csa.launchdir).
+
+REPO RESOLUTION (runtime_bundle_repo_agnostic_plan.md WS4/H5a commit (c)): read `OVERSIGHT_REPO`
+from your own process environment (your cwd stays whatever the plist's `WorkingDirectory` sets;
+`OVERSIGHT_REPO` is a separate, resolved-repo-root env var the plist also carries) — this is also
+`<REPO_ROOT>` below, used for the path-existence pre-embed check. If `OVERSIGHT_REPO` is unset,
+empty, or does not resolve to a real, existing git repository (a `.git` entry at that path), do NOT
+proceed and do NOT fall back to your cwd: write the failing-step heartbeat per `_preamble.txt` step
+5 naming "OVERSIGHT_REPO unset or invalid" and stop. Otherwise run
+`python3 ~/.claude/scripts/repo_manifest.py get product.name --repo "$OVERSIGHT_REPO"` for
+`<PRODUCT>` (expect a display name, e.g. with internal spaces — use the `get` output verbatim,
+never a remembered literal) and `python3 ~/.claude/scripts/repo_manifest.py get
+oversight.report_dir --repo "$OVERSIGHT_REPO"` for `<REPORT_DIR>` below (the resolved path is
+already absolute, `~`-expanded, and `${slug}`-substituted — use it verbatim, never re-derive it).
+A `get` failure past this point is never silent either — write the failing-step heartbeat per
+`_preamble.txt` step 5 and stop. That stop rule governs `product.name` and
+`oversight.report_dir`. A failed `get` for
+`github.project_owner` / `github.project_number` (the keys a `gh_issue.sh create --priority` needs)
+is the ONE exception: do NOT stop — file the issue anyway WITHOUT `--project`/`--owner` (it exits 0
+with a stderr warning, Priority unset) and record the manifest gap as its own finding. Omit BOTH:
+passing `--project` without `--owner` exits PARTIAL 3 instead (the issue is still filed, its
+number on stdout). Phase D never drops an unattended job's findings for a missing board config
+(#5827).
+
+You are the WEEKLY STATE-OF-THE-APP job for `<PRODUCT>` (tracked under the open oversight tracking issue named in `~/.claude/knowledge/oversight_install.md` §0's TRACKING line). First assert the daily job's heartbeat is current (the watcher loop) — stale = P1 finding + notify. Then dispatch the `launch-director` agent (it reads .claude/oversight/launch-director.md) for the weekly report: verdict line, ranked queue, kill list, blockers & asks with by-whens, trend + spend-sanity, watch items. YOU — the session; the agent never edits — write the report as a self-contained HTML file (inline CSS, no external assets) to `<REPORT_DIR>`/csa_state_<date>.html (creating `<REPORT_DIR>` first if it does not yet exist), and EMBED the ranked queue as the machine-readable element the issue wheel consumes: `<script type="application/json" id="oversight-ranked-queue">` containing a JSON array of {"rank":N,"issue":N,"title":"...","paths":["..."]}.
+
+MANDATORY PRE-EMBED VALIDATION (fail-loud — run this BEFORE writing the ranked-queue JSON into the HTML, not after; a queue item that fails either check below is DROPPED from the embedded array entirely, never embedded with a note, and the drop is logged in the report's own body under a "Dropped from ranked queue" list naming the issue# and the reason). Root cause this closes: the loop's last runs parked 9/10 items because the queue declared `modules/estimate_product_layer/**/{quantity_calculator,generator}.py` — files that actually live under `modules/estimate_engine_v3/estimate_generator/` — and separately ranked issue #9, which was already CLOSED. Both classes of staleness are checkable mechanically at authoring time; do not ship a queue that hasn't been checked.
+  (a) PATH EXISTENCE — for EVERY path in an item's `paths` list, before embedding that item, run: `ls -d <REPO_ROOT>/<path>` (a glob path — e.g. one containing `**` or `*` — expand it first: `cd <REPO_ROOT> && compgen -G "<path>"` (bash) or an equivalent shell-glob check; a glob that expands to ZERO matches is a FAIL exactly like a literal missing file). Any path in the item's list that fails this check — the literal path does not exist AND (for a glob) it expands to nothing — is a FAIL for that path; if that item has NO surviving valid path, drop the whole item. If it has at least one surviving valid path, embed the item with `paths` narrowed to only the paths that passed, and note the narrowing in the report body.
+  (b) ISSUE STATE — for EVERY item carrying a real `issue` number (never for a fallback/no-id row), run: `gh issue view <issue> --json state --jq .state` — the result MUST be exactly `OPEN`. Any other result (`CLOSED`, an error, empty output) is a FAIL for that item: DROP it from the embedded array outright, regardless of its rank.
+Run both checks for every candidate item BEFORE finalizing rank order, then re-number `rank` contiguously (1..N) over the SURVIVING items only — never leave a gap or reuse a dropped item's rank number.
+
+Then post a comment on the open oversight tracking issue named in `~/.claude/knowledge/oversight_install.md` §0's TRACKING line with the verdict line + the top 5 ranked items + the file path. Heartbeat summary = the verdict line, plus the full artifact path (`<REPORT_DIR>`/csa_state_<date>.html, with <date> the actual date used and `<REPORT_DIR>` its actually-resolved value from REPO RESOLUTION above) named exactly as written — never a bare filename — plus the count of items dropped by the pre-embed validation above (e.g. "... | wrote /Users/x/.claude/plans/wheel/csa/csa_state_2026-09-07.html | dropped 2/12: #9 closed, #4481 path-missing").
+
+PIN NOTE: Opus pin-honoring in headless dispatch is UNVERIFIED (install doc §0 leg 2). If the dispatched agent's output reads shallow for its tier, record PIN-SUSPECT in your heartbeat summary and continue.

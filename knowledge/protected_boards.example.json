@@ -1,0 +1,4 @@
+{
+  "_comment": "EXAMPLE registry for hooks/protected_board_guard.py (gate 5b). Copy to knowledge/protected_boards.json and list each GitHub Projects board that agents must never add items to. Each entry needs at least \"owner\" and \"number\"; \"node_id\" (the board's PVT_... id), \"title\", \"tracker\" and \"reason\" make matching and the deny message more precise. With an empty list nothing is protected, and the guard allows every gh project command.",
+  "boards": []
+}

@@ -1,0 +1,155 @@
+{
+  "_comment": "Rules for hooks/agent_router.py (auto-invocation design, agentic-systems-architect 2026-09-28). Precision over recall: a false hint can cost a ~400K-token dispatch. Patterns are case-insensitive Python regexes. prompt rules fire on UserPromptSubmit; path rules fire on PostToolUse Write|Edit|MultiEdit. 'must: true' path rules also record an obligation that hooks/agent_obligations.py checks at Stop. Hints are advisory: outward acts (push, publish, spend, posting, messaging) always still need the operator.",
+  "prompt_rules": [
+    {
+      "id": "sell-company",
+      "agent": "venture-director",
+      "hint": "this looks like selling a company or planning an exit",
+      "any": [
+        "\\bsell(ing)? (the |my |our |this )?(company|business|app)\\b",
+        "\\b(acquirer|acquisition target|exit plan|business broker|company buyer|buyers? for (the |my |our )?(company|business))\\b"
+      ],
+      "not": [
+        "\\bupsell",
+        "\\bsell (the |a )?(plan|subscription|seat|feature)\\b",
+        "\\b(iris|scout|phone agent|voice agent)\\b",
+        "^\\s*/gtm\\b",
+        "\\bsell (the|our) (app|product) to\\b"
+      ]
+    },
+    {
+      "id": "cofounder",
+      "agent": "partner-recruiter",
+      "hint": "this looks like finding a co-founder or advisor",
+      "any": [
+        "\\bco-?founders?\\b",
+        "\\bfind (a|my|an) (technical )?(partner|cto|advisor)\\b",
+        "\\bbuild(ing)? a (founding )?team\\b"
+      ],
+      "not": [
+        "\\b(iris|scout|phone agent|voice agent)\\b",
+        "^\\s*/gtm\\b",
+        "\\bteam management\\b"
+      ]
+    },
+    {
+      "id": "hire-staff",
+      "agent": "hiring-specialist",
+      "hint": "this looks like hiring staff",
+      "any": [
+        "\\bhir(e|ing) (staff|employees?|an employee|workers?|a crew|crew members?|an? (office manager|receptionist|hygienist|carpenter|project manager|salesperson|engineer|developer))\\b",
+        "\\b(post a job|job posting|job post|job listing|indeed (post|posting|job|applicants?))\\b",
+        "\\bscreen(ing)? (the )?applicants\\b"
+      ],
+      "not": [
+        "\\b(iris|scout|phone agent|voice agent)\\b",
+        "^\\s*/gtm\\b",
+        "\\bjobs? (listing|posting) (page|date)\\b",
+        "\\bcrm jobs?\\b"
+      ]
+    },
+    {
+      "id": "company-marketing",
+      "agent": "marketing-director",
+      "hint": "this looks like marketing work for one of the companies (pass its company pack)",
+      "all": [
+        "\\b(other-company|othercompany|otherapp|exampleapp|exampleapp?)\\b",
+        "\\b(marketing|google ads|facebook (page|post|ads)|instagram|google business profile|\\bgbp\\b|yelp|houzz|angi|thumbtack|nextdoor|seo|online presence|social media|landing page)\\b"
+      ],
+      "not": [
+        "\\bquickbooks\\b",
+        "\\bp&l\\b",
+        "\\bbookkeeping\\b",
+        "\\b(iris|scout|phone agent|voice agent)\\b",
+        "^\\s*/gtm\\b",
+        "\\blanding page after login\\b"
+      ]
+    },
+    {
+      "id": "agent-design",
+      "agent": "agentic-systems-architect",
+      "hint": "this looks like agent, hook or agentic-loop design (or token burn)",
+      "any": [
+        "\\b(create|build|design|add|make|write)( an?| new| some| more| the)* (specialist )?(agents?|sub-?agents?|agentic (system|group|team))\\b",
+        "\\bagent (design|architecture)\\b",
+        "\\b(burning|burn) (all )?(of )?(my |our )?tokens\\b",
+        "\\btoken (burn|usage)\\b",
+        "\\bauto-?(invoke|invocation|dispatch)\\b"
+      ],
+      "not": [
+        "\\bnew agent session\\b",
+        "\\b(to|for) a new agent\\b",
+        "\\b(iris|scout|phone agent|voice agent)\\b",
+        "^\\s*/gtm\\b",
+        "\\btoken usage on\\b",
+        "\\bagent prompt for\\b",
+        "\\bmake the agent\\b"
+      ]
+    },
+    {
+      "id": "cloud-cost",
+      "agent": "cost-strategist",
+      "hint": "this looks like a vendor or cloud spend question",
+      "any": [
+        "\\b(cloud|gcp|aws|vendor|saas|subscription) (bill|bills|spend|costs?)\\b",
+        "\\bcost audit\\b",
+        "\\bwhy is (my|the|our) bill\\b"
+      ],
+      "not": [
+        "\\bad (spend|budget)\\b",
+        "\\b(iris|scout|phone agent|voice agent)\\b",
+        "^\\s*/gtm\\b",
+        "\\bvendor costs?\\b",
+        "\\bsubscription cost on\\b",
+        "\\bpricing page\\b"
+      ]
+    }
+  ],
+  "path_rules": [
+    {
+      "id": "agent-file",
+      "agent": "agentic-systems-architect",
+      "must": true,
+      "hint": "an agent definition changed: have agentic-systems-architect review it and add or refresh its card on ~/.claude/plans/agent_roster_tracker.html",
+      "globs": [
+        "*/.claude/agents/*.md"
+      ]
+    },
+    {
+      "id": "plan-file",
+      "agent": "plan-reviewer",
+      "must": true,
+      "hint": "a plan file was written: have plan-reviewer review it before implementation (record_plan_review.py after); if this file is not a plan, ignore this",
+      "dir_globs": [
+        "*/.claude/plans/*",
+        "*/plans/*"
+      ],
+      "name_globs": [
+        "*plan*.md"
+      ],
+      "not_name_globs": [
+        "*handoff*",
+        "*verdict*",
+        "*report*",
+        "*brief*",
+        "*facts*",
+        "*.history.md",
+        "*ruling*",
+        "*decision*",
+        "*findings*",
+        "*summary*"
+      ]
+    },
+    {
+      "id": "kb-file",
+      "agent": "code-reviewer",
+      "must": false,
+      "hint": "a knowledge-base file changed: run a claims verification pass (primary sources, citation-style.md) before committing it",
+      "globs": [
+        "*/.claude/knowledge/*_kb/*.md",
+        "*/.claude/knowledge/*_kb/*/*.md"
+      ]
+    }
+  ],
+  "_path_semantics": "Path globs match case-insensitively. 'globs' match the full path; for rules with 'name_globs', 'dir_globs' must match the full path and 'name_globs' / 'not_name_globs' match the FILE NAME only. An obligation is cleared by the FIRST qualifying review (dispatch or live claim at/after the first edit, plan-review ledger, or file back to HEAD) \u2014 later edits in the same session do not re-obligate (deliberate anti-nag; warm review rounds write no new spend row)."
+}
